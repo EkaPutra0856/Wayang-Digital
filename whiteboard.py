@@ -131,7 +131,7 @@ class WhiteboardRenderer:
         else:
             print("\n[Sistem] RESUME: Posisi Wayang kembali aktif.")
 
-    def render(self, screen_res, cam_frame, hand_boxes, cam_res, effect_mgr=None):
+    def render(self, screen_res, cam_frame, hand_boxes, cam_res, effect_mgr=None, ball_mgr=None):
         screen_w, screen_h = screen_res
         cam_w, cam_h = cam_res
 
@@ -145,12 +145,15 @@ class WhiteboardRenderer:
         # 2. Dapatkan Background Fullscreen
         canvas = self._get_current_background(screen_w, screen_h)
 
-        # 3. Render Efek Animasi (Tas & Buku) jika effect_mgr dipassing
+        # 3. Render Efek Animasi (Tas & Buku)
         if effect_mgr is not None:
             canvas = effect_mgr.render(canvas)
 
         scale_x = screen_w / cam_w
         scale_y = screen_h / cam_h
+
+        # Koleksi kotak karakter dalam resolusi layar untuk deteksi pantulan bola
+        character_screen_boxes = []
 
         # 4. Render Karakter Wayang di Layar Penuh
         for item in active_boxes:
@@ -177,6 +180,9 @@ class WhiteboardRenderer:
                     render_y = sy_min - (render_h - box_h)
 
                     canvas = self._overlay_transparent(canvas, sprite, render_x, render_y, render_w, render_h)
+                    
+                    # Simpan area tubuh wayang untuk collider bola
+                    character_screen_boxes.append((render_x, render_y, render_x + render_w, render_y + render_h))
 
             if self.show_box:
                 box_color = (255, 120, 0) if label == "Left" else (0, 80, 255)
@@ -187,7 +193,11 @@ class WhiteboardRenderer:
                 cv2.putText(canvas, role_label, (sx_min + 8, sy_min - 8),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-        # 5. Render PiP Camera Mini di Atas
+        # 5. Render Animasi Bola Pantul
+        if ball_mgr is not None:
+            canvas = ball_mgr.update_and_render(canvas, character_screen_boxes)
+
+        # 6. Render PiP Camera Mini di Atas
         if self.show_pip:
             pip_w = int(screen_w * 0.20)
             pip_h = int(pip_w * (cam_h / cam_w))

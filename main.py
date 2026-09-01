@@ -6,17 +6,17 @@ from voice_trigger import VoiceBackgroundManager
 from finger_counter import HandDetector
 from whiteboard import WhiteboardRenderer
 from effect_animator import EffectAnimator
+from ball_animator import BallAnimator
 
 # ==========================================
 # KONFIGURASI SISTEM (ON / OFF)
 # ==========================================
 SHOW_BOUNDING_BOX     = False  # True = Tampilkan kotak & label jari | False = Wayang bersih
 SHOW_PIP_CAMERA       = True   # True = Tampilkan webcam mini 20% di pojok | False = Sembunyikan
-ENABLE_EFFECT_VOICE   = False  # True = Voice effect aktif | False = Hanya keyboard (1, 2, 0)
+ENABLE_EFFECT_VOICE   = False  # True = Voice effect aktif | False = Mode Keyboard
 
 
 def get_screen_resolution():
-    """Mengambil resolusi monitor Windows secara otomatis."""
     try:
         user32 = ctypes.windll.user32
         return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
@@ -26,7 +26,7 @@ def get_screen_resolution():
 
 def main():
     print("=" * 60)
-    print("  SISTEM WAYANG DIGITAL: KEYBOARD TRIGGER ANIMASI EFEK")
+    print("  SISTEM WAYANG DIGITAL: INTERAKTIF BOLA PANTUL & EFEK")
     print("=" * 60)
 
     latar_dir = os.path.join(os.path.dirname(__file__), "Latar")
@@ -36,18 +36,14 @@ def main():
     screen_w, screen_h = get_screen_resolution()
     print(f"[Display] Resolusi Layar Monitor: {screen_w}x{screen_h}")
 
-    # 1. Start Voice Background (Rumah, Sekolah, Taman)
     voice_manager = VoiceBackgroundManager(latar_dir=latar_dir)
     voice_manager.start()
 
-    # 2. Inisialisasi Efek Animasi
     effect_mgr = EffectAnimator()
     if ENABLE_EFFECT_VOICE:
         effect_mgr.start_voice()
-        print("[Voice Effect] Aktif.")
-    else:
-        print("[Voice Effect] Dinonaktifkan (Mode Keyboard Aktif).")
 
+    ball_mgr = BallAnimator()
     detector = HandDetector()
     board = WhiteboardRenderer(
         window_name="Wayang Digital",
@@ -58,11 +54,12 @@ def main():
     cap = cv2.VideoCapture(0)
     last_output = ""
 
-    print("\nKontrol Keyboard:")
-    print(" [1]     : Munculkan / Hilangkan Tas (Toggle)")
-    print(" [2]     : Munculkan / Hilangkan Buku (Toggle)")
-    print(" [0]     : Hilangkan Semua Efek Sekaligus (Reset)")
-    print(" [Spasi] : Pause / Resume Gerakan Wayang")
+    print("\nKontrol Keyboard Efek:")
+    print(" [1]     : Munculkan / Hilangkan Tas")
+    print(" [2]     : Munculkan / Hilangkan Buku")
+    print(" [3]     : Munculkan / Hilangkan Bola Pantul")
+    print(" [0]     : Hilangkan SEMUA Efek Sekaligus (Reset)")
+    print(" [Spasi] : Pause / Resume Posisi Wayang")
     print(" [q/Esc] : Keluar Program\n")
 
     try:
@@ -82,13 +79,14 @@ def main():
             # Deteksi Jari Tangan
             frame, hand_boxes, counts = detector.process_frame(frame)
 
-            # Render Fullscreen Whiteboard
+            # Render Fullscreen Whiteboard (Wayang + Efek + Bola Pantul)
             board.render(
                 screen_res=(screen_w, screen_h),
                 cam_frame=frame,
                 hand_boxes=hand_boxes,
                 cam_res=(cam_w, cam_h),
-                effect_mgr=effect_mgr
+                effect_mgr=effect_mgr,
+                ball_mgr=ball_mgr
             )
 
             # Output Terminal
@@ -101,7 +99,7 @@ def main():
                 print(current_output)
                 last_output = current_output
 
-            # Kontrol Tombol Keyboard
+            # Kontrol Keyboard
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q') or key == 27 or board.is_closed():
                 break
@@ -111,8 +109,11 @@ def main():
                 effect_mgr.toggle_tas()
             elif key == ord('2'):
                 effect_mgr.toggle_buku()
+            elif key == ord('3'):
+                ball_mgr.toggle(screen_w, screen_h)
             elif key == ord('0'):
                 effect_mgr.trigger_dismiss()
+                ball_mgr.dismiss()
 
     finally:
         if ENABLE_EFFECT_VOICE:
