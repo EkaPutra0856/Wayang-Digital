@@ -3,6 +3,7 @@ import cv2
 import mediapipe as mp
 import time
 import math
+from pathlib import Path
 
 BaseOptions = mp.tasks.BaseOptions
 HandLandmarker = mp.tasks.vision.HandLandmarker
@@ -26,10 +27,14 @@ HAND_CONNECTIONS = [
 ]
 
 class HandDetector:
-    def __init__(self, model_path="hand_landmarker.task"):
+    def __init__(self, model_path=None):
+        model_path = Path(model_path) if model_path else Path(__file__).resolve().parent / "hand_landmarker.task"
+        if not model_path.is_file():
+            raise FileNotFoundError(f"[MODEL ERROR] Missing: {model_path}")
         self.latest_result = None
+        self.last_timestamp = -1
         options = HandLandmarkerOptions(
-            base_options=BaseOptions(model_asset_path=model_path),
+            base_options=BaseOptions(model_asset_path=str(model_path)),
             running_mode=VisionRunningMode.LIVE_STREAM,
             num_hands=2,
             min_hand_detection_confidence=0.4,
@@ -97,7 +102,8 @@ class HandDetector:
         h, w, _ = frame.shape
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-        timestamp_ms = int(time.time() * 1000)
+        timestamp_ms = max(self.last_timestamp + 1, time.monotonic_ns() // 1_000_000)
+        self.last_timestamp = timestamp_ms
         self.landmarker.detect_async(mp_image, timestamp_ms)
 
         hand_boxes = []
