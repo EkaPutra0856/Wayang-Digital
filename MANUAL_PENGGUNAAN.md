@@ -76,7 +76,7 @@ Keyboard diabaikan ketika window lain memiliki fokus.
 | W | Toggle preview webcam |
 | D | Toggle kotak deteksi tangan |
 | U | Show/hide seluruh panel UI (status dan panduan); preview webcam tetap melalui W |
-| F12 atau ? (tombol /) | Toggle bantuan ketika UI sudah ditampilkan |
+| F12 atau ? (tombol /) | Buka panduan dengan UI; menutup panduan sekaligus menyembunyikan UI |
 | Q | Keluar, termasuk saat video |
 
 Fallback sound `Z X C V B` dan video `6 7 8 9` dipilih sebagai mapping aktual.
@@ -362,14 +362,20 @@ Panel status menampilkan latar, bank, pose, kostum AUTO/MANUAL, run, sleep, bola
 lock/balance, pelukan, serta nama audio/video. Tampilan memakai kartu gelap dengan
 aksen emas agar terbaca di berbagai latar.
 
-Saat startup, UI tersembunyi secara default. `U` adalah satu-satunya tombol untuk
-menampilkan atau menyembunyikan UI. `F12`/`?` tidak dapat menampilkan UI dari
-kondisi tersembunyi; tombol tersebut hanya mengganti panduan ketika UI sudah aktif.
-Tekan U lagi untuk menampilkan kembali. Preview kamera terpisah, dikendalikan W.
-`F12` atau `?` membuka/menutup panduan; ketika dibuka, UI otomatis diaktifkan.
+Saat startup, UI tersembunyi secara default. `U` menampilkan atau menyembunyikan
+panel status. `F12`/`?` dapat membuka panduan langsung ketika UI tersembunyi;
+panel UI otomatis ditampilkan agar panduan terlihat. Menekan F12/`?` lagi untuk
+menutup panduan juga otomatis menyembunyikan UI. Preview kamera terpisah,
+dikendalikan W. Tekan U bila ingin menampilkan panel status tanpa panduan.
 Panduan menggantikan panel status dengan enam kelompok dalam dua kolom:
 karakter/kostum, latar/media, animasi, tampilan, ukuran/visibilitas, dan cara bermain.
 Ukuran panel mengikuti resolusi panggung. Curtain tetap berada di atas semua UI.
+
+Pada mode deteksi jari, tinggi visual Nando memakai faktor 0,80 dari tinggi
+bounding box tangan sehingga lebih kecil dan posisinya sedikit lebih rendah. Ibu
+memakai faktor 1,25 sehingga sedikit lebih besar. Scale Lock dan Balance tetap
+memakai ukuran terkunci atau target 46%, jadi penyesuaian gesture ini tidak
+mengganggu kedua mode tersebut.
 
 ## 18. Pengujian dan referensi implementasi
 

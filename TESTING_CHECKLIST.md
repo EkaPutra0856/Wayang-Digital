@@ -199,7 +199,7 @@ operator atas ekspresi/proporsi serta pengenalan ucapan nyata tetap perlu latiha
 
 - [x] UI show/hide menyembunyikan panel status dan panduan bersamaan.
 - [x] Panduan dirender pada 640x360, 1280x720, 1920x1080 tanpa error.
-- [x] F12 mengaktifkan UI saat membuka panduan; U menyembunyikannya kembali.
+- [x] F12 mengaktifkan UI saat membuka panduan dan menyembunyikannya otomatis saat ditutup.
 - [x] Inspeksi render panduan 1280x720: dua kolom rapi dan teks tidak terpotong.
 - [ ] Uji kenyamanan loop lari dan UI terbaru pada proyektor/perangkat pertunjukan.
 

@@ -12,6 +12,8 @@ BALANCED_HEIGHT = 0.46
 CURTAIN_CLOSE = 0.35
 CURTAIN_HOLD = 0.5
 CURTAIN_OPEN = 0.65
+GESTURE_HEIGHT_FACTOR = {'Right': 0.80, 'Left': 1.25}
+GESTURE_Y_OFFSET = {'Right': 0.03, 'Left': 0.0}
 
 
 @dataclass
@@ -44,7 +46,9 @@ class AnimationController:
     animation_bank: int = 1
     current_bg: int = 0
     characters: dict = field(default_factory=lambda: {
-        "Right": Character(x=0.65), "Left": Character(x=0.32)})
+        # Stage framing: Ibu stays farther left; Nando is slightly higher and
+        # farther right to keep the two figures visually separated.
+        "Right": Character(x=0.70, y=0.88), "Left": Character(x=0.26)})
     manual_pose: bool = False
     run_mode: bool = False
     run_frame: int = 0
@@ -233,8 +237,10 @@ class AnimationController:
                     if abs(char.height-BALANCED_HEIGHT) < 0.001 and abs(char.y-0.88) < 0.001:
                         char.height, char.y, char.balance_pending = BALANCED_HEIGHT, 0.88, False
                 elif not self.scale_locked:
-                    char.y += (y2/cam_h - char.y) * smooth
-                    char.height += (min(0.8, max(0.18, (y2-y1)*1.5/cam_h))-char.height)*smooth
+                    target_y = min(0.98, max(0.02, y2/cam_h + GESTURE_Y_OFFSET[label]))
+                    char.y += (target_y - char.y) * smooth
+                    factor = GESTURE_HEIGHT_FACTOR[label]
+                    char.height += (min(0.8, max(0.18, (y2-y1)*factor/cam_h))-char.height)*smooth
             if not (self.manual_pose and char.manual_control) and not self.sleep_mode and not (label == "Right" and self.football_active):
                 finger = item["count"]
                 if char.candidate != finger:

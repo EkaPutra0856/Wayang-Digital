@@ -39,8 +39,11 @@ def handle_keys(pressed, state, board, audio, video, held=None):
     if 'F' in pressed:
         state.fullscreen = not state.fullscreen
         board.set_fullscreen(state.fullscreen)
-    if state.show_hud and ('F12' in pressed or '?' in pressed):
+    if 'F12' in pressed or '?' in pressed:
         state.show_help = not state.show_help
+        # Panduan selalu membuka panel agar dapat dibaca, lalu menutupnya
+        # kembali saat panduan ditutup sehingga tidak perlu menekan U.
+        state.show_hud = state.show_help
     for key, field in [('W', 'show_pip'), ('U', 'show_hud'), ('D', 'show_box')]:
         if key in pressed:
             setattr(state, field, not getattr(state, field))

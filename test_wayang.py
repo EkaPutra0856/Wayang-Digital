@@ -69,10 +69,22 @@ class StateTests(unittest.TestCase):
         for box in ((0, 0, 600, 480), (20, 30, 40, 80)):
             state.update(.1, [{'label': 'Right', 'box': box, 'count': 1}])
             self.assertEqual((char.height, char.y), original)
-        self.assertNotEqual(char.x, .65)
+        self.assertNotEqual(char.x, .70)
         state.toggle_scale_lock()
         state.update(.1, [{'label': 'Right', 'box': (20, 30, 40, 80), 'count': 1}])
         self.assertNotEqual((char.height, char.y), original)
+
+    def test_gesture_scale_nando_smaller_than_ibu(self):
+        state = AnimationController()
+        hands = [
+            {'label': 'Right', 'box': (100, 50, 220, 350), 'count': 1},
+            {'label': 'Left', 'box': (300, 50, 420, 350), 'count': 1},
+        ]
+        for _ in range(20):
+            state.update(.05, hands)
+        self.assertLess(state.characters['Right'].height, state.characters['Left'].height)
+        self.assertAlmostEqual(state.characters['Right'].height / state.characters['Left'].height,
+                               0.80 / 1.25, delta=.03)
 
     def test_balance_waits_for_each_hand_then_locks(self):
         state = AnimationController()
@@ -450,13 +462,9 @@ class RenderTests(unittest.TestCase):
             state.show_hud = False
         state.show_help = False
         handle_keys({'F12'}, state, board, audio, video)
-        self.assertFalse(state.show_help and state.show_hud)
-        handle_keys({'U'}, state, board, audio, video)
-        self.assertTrue(state.show_hud)
+        self.assertTrue(state.show_help and state.show_hud)
         handle_keys({'F12'}, state, board, audio, video)
-        self.assertTrue(state.show_help)
-        handle_keys({'U'}, state, board, audio, video)
-        self.assertFalse(state.show_hud)
+        self.assertFalse(state.show_help or state.show_hud)
 
 
 if __name__ == '__main__':
