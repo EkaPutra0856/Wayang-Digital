@@ -14,12 +14,13 @@ class VideoManager:
         self.fade_frame = None
         self.fade_remaining = 0.0
         self.error = None
+        self.soundtrack = None
 
     @property
     def video_playing(self):
         return self.cap is not None
 
-    def play(self, path, paused=False):
+    def play(self, path, paused=False, soundtrack=None):
         if self.video_playing:
             print("[VIDEO] Trigger ignored: a cutscene is already playing")
             return False
@@ -33,6 +34,7 @@ class VideoManager:
         self.audio.stop()
         self.cap, self.frame, self.frame_index = cap, frame, 0
         self.current_video = path
+        self.soundtrack = soundtrack
         self.elapsed = 0.0
         self.fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         video_duration = cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.fps
@@ -40,7 +42,7 @@ class VideoManager:
         self.duration = max(video_duration, float(metadata.get("format", {}).get("duration", 0)))
         self.fade_frame, self.fade_remaining = None, 0.0
         self.error = None
-        self.audio.play(path, paused=paused)
+        self.audio.play(soundtrack or path, paused=paused)
         print(f"[VIDEO] Playing: {path.name}")
         return True
 
@@ -52,7 +54,7 @@ class VideoManager:
             if self.fade_remaining == 0:
                 self.fade_frame = None
             return None
-        if self.audio.current_sound == self.current_video:
+        if self.audio.current_sound == (self.soundtrack or self.current_video):
             self.elapsed = max(self.elapsed, self.audio.position)
         else:
             self.elapsed += dt
@@ -76,11 +78,12 @@ class VideoManager:
     def stop(self, fade=False):
         if self.cap:
             self.cap.release()
-        if self.current_video:
+        if self.current_video and self.soundtrack is None:
             self.audio.stop()
         self.fade_frame = self.frame if fade else None
         self.fade_remaining = 0.45 if fade else 0.0
         self.cap, self.frame, self.current_video = None, None, None
+        self.soundtrack = None
 
     def close(self):
         self.stop()

@@ -5,7 +5,24 @@ webcam, speaker, arah tangan fisik, dan kenyamanan animasi oleh operator.
 
 ## Hasil otomatis
 
-- [x] Update kostum — 9 PNG SPORT ditemukan/dipreload tanpa rename; manifest total 60 aset.
+- [x] Pose keyboard memakai kombinasi I+1–5 untuk Ibu dan N+1–5 untuk Nando.
+- [x] Kombinasi pose yang sama melakukan hide/show per karakter; G kembali ke gesture.
+- [x] UI default tersembunyi dan hanya U yang dapat menampilkannya.
+
+- [x] Mode pose keyboard: karakter tampil tanpa tangan; angka pose yang sama
+  menyembunyikan/menampilkan lagi; deteksi tangan tidak membatalkan hide manual.
+- [x] G kembali ke deteksi tangan dan fade; suite terbaru 28 tes lulus.
+
+- [x] Update mapping video: 27 tes lulus, termasuk trigger 6/7/8/9,
+  BG 1/2/4/5, lagu 1/2/4/5, audio internal diganti, anti-duplikasi,
+  lagu tetap bermain setelah video berakhir, dan tombol 0 tidak memutar video.
+- [ ] Uji dengar keempat pasangan video/lagu dan pergantian latar di perangkat lokal.
+
+Catatan: hasil pengujian audio internal di bawah adalah tes kemampuan backend.
+Mapping keyboard terbaru selalu menggunakan lagu MP3 pengganti.
+
+
+- [x] Update kostum — 9 PNG SPORT ditemukan/dipreload tanpa rename; manifest total 59 aset.
 - [x] Suite terbaru: 26 tes lulus, termasuk 7 tes kostum dan 2 tes UI/run-loop tambahan.
 
 - [x] PASS — 5 tes tambahan fade independen, lock X-only, balancing tertunda,
@@ -14,14 +31,14 @@ webcam, speaker, arah tangan fisik, dan kenyamanan animasi oleh operator.
 - [x] PASS — syntax seluruh modul aplikasi melalui `py_compile`.
 - [x] PASS — import seluruh modul aplikasi.
 - [x] PASS — `python -m pip check`: tidak ada dependensi rusak.
-- [x] PASS — seluruh 60 aset wajib ada; 50 PNG berhasil didekode dengan alpha sprite.
+- [x] PASS — seluruh 59 aset wajib ada; 50 PNG berhasil didekode dengan alpha sprite.
 - [x] PASS — startup `main.py --headless --no-camera --no-voice --mute --frames 5` dan cleanup.
 - [x] PASS — validasi aset dijalankan dari direktori kerja lain.
 - [x] PASS — MediaPipe memuat model dan memproses frame sintetis.
 - [x] PASS — 10 tes state/render/audio melalui `test_wayang.py`.
 - [x] PASS — 2 tes integrasi seluruh MP3/MP4 asli melalui `test_media.py`.
 - [x] PASS — decode kelima sound sampai selesai, duplicate diabaikan, replay diizinkan.
-- [x] PASS — kelima video + PCM internal, pause, selesai, replay, skip, dan satu player.
+- [x] PASS — keempat video + PCM internal, pause, selesai, replay, skip, dan satu player.
 - [x] PASS — penelusuran source tidak menemukan referensi aktif folder aset lama.
 - [x] PASS — inspeksi gambar render offscreen: alpha, rasio, HUD, help, dan latar.
 - [x] PASS — `python main.py --windowed --no-voice --frames 90`: window berjalan,
@@ -83,8 +100,8 @@ suara terdengar dari speaker. Webcam sintetis bukan pengujian gesture manusia.
 
 ## 07 — Video (ulangi 6, 7, 8, 9, 0)
 
-- [x] Kelima video terbuka dan selesai kembali ke panggung dalam tes backend.
-- [x] Kelima MP4 memiliki stream audio internal dan PCM berhasil didekode.
+- [x] Keempat video terbuka dan selesai kembali ke panggung dalam tes backend.
+- [x] Keempat MP4 memiliki stream audio internal dan PCM berhasil didekode.
 - [x] Video sama/berbeda saat player aktif diabaikan.
 - [x] Hanya satu player dan satu kanal audio; BGM digantikan video.
 - [x] Frame dan audio freeze saat pause; skip membersihkan player/audio.

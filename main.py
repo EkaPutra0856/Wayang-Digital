@@ -5,7 +5,7 @@ import ctypes
 import time
 import cv2
 import numpy as np
-from asset_manager import AssetManager, SOUNDS, VIDEOS, RUN
+from asset_manager import AssetManager, SOUNDS, VIDEOS, VIDEO_CUES, RUN
 from animation_controller import AnimationController
 from audio_manager import AudioCache, AudioManager
 from video_manager import VideoManager
@@ -23,7 +23,8 @@ def get_screen_resolution():
         return 1280, 720
 
 
-def handle_keys(pressed, state, board, audio, video):
+def handle_keys(pressed, state, board, audio, video, held=None):
+    held = pressed if held is None else held
     if 'Q' in pressed:
         return False
     if 'ESC' in pressed:
@@ -38,10 +39,8 @@ def handle_keys(pressed, state, board, audio, video):
     if 'F' in pressed:
         state.fullscreen = not state.fullscreen
         board.set_fullscreen(state.fullscreen)
-    if 'F12' in pressed or '?' in pressed:
+    if state.show_hud and ('F12' in pressed or '?' in pressed):
         state.show_help = not state.show_help
-        if state.show_help:
-            state.show_hud = True
     for key, field in [('W', 'show_pip'), ('U', 'show_hud'), ('D', 'show_box')]:
         if key in pressed:
             setattr(state, field, not getattr(state, field))
@@ -64,10 +63,13 @@ def handle_keys(pressed, state, board, audio, video):
     if 'TAB' in pressed:
         state.toggle_bank()
     if 'G' in pressed:
-        state.manual_pose = False
+        state.use_gesture()
     for i in range(1, 6):
         if str(i) in pressed:
-            state.debug_pose(i)
+            if 'I' in held:
+                state.debug_pose(i, 'Left')
+            if 'N' in held:
+                state.debug_pose(i, 'Right')
         if f'F{i}' in pressed:
             state.set_background(i-1)
     if '[' in pressed:
@@ -75,9 +77,10 @@ def handle_keys(pressed, state, board, audio, video):
     if ']' in pressed:
         state.set_background((state.current_bg+1) % 5)
     # Video wins if a sound and video key arrive together.
-    for key, path in zip('67890', VIDEOS):
+    for key, (path, background, soundtrack) in VIDEO_CUES.items():
         if key in pressed:
-            video.play(path)
+            if video.play(path, soundtrack=soundtrack):
+                state.set_background(background)
             return True
     for key, path in zip('ZXCVB', SOUNDS):
         if key in pressed:
@@ -151,7 +154,7 @@ def main(argv=None):
         screen_res = (max(640, round(sw*scale)), max(360, round(sh*scale)))
         if args.headless:
             screen_res = (1280, 720)
-        print('[READY] TAB: bank | 1-5: pose | G: gesture | F12: help | Q: quit', flush=True)
+        print('[READY] I+1-5: Ibu | N+1-5: Nando | G: gesture | U: UI | F12: help | Q: quit', flush=True)
         previous = time.perf_counter()
         frame_count, camera_failures = 0, 0
         silent_buffer = np.zeros((1600, 2), dtype=np.int16)
@@ -160,7 +163,7 @@ def main(argv=None):
             dt = min(0.1, max(0.0, started-previous))
             previous = started
             pressed, held = keyboard.poll() if keyboard else (set(), set())
-            if not handle_keys(pressed, state, board, audio, video):
+            if not handle_keys(pressed, state, board, audio, video, held):
                 break
             frame, hands = None, []
             if cap is not None:

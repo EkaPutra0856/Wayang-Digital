@@ -52,13 +52,14 @@ Keyboard diabaikan ketika window lain memiliki fokus.
 | Tombol | Fungsi |
 |---|---|
 | TAB | Ganti bank 1 ↔ 2 untuk kedua karakter |
-| 1–5 | Pose manual sesuai bank, untuk kedua karakter |
-| G | Kembali ke pose gesture; posisi tangan tetap aktif saat tes pose manual |
+| I + 1–5 | Pose manual Ibu; kombinasi yang sama lagi = hide Ibu |
+| N + 1–5 | Pose manual Nando; kombinasi yang sama lagi = hide Nando |
+| G | Kembali ke pose gesture untuk kedua karakter |
 | [ / ] | Background sebelumnya / berikutnya, wrap-around |
 | F1–F5 | Langsung background 1–5 |
 | Z / X / C / V / B | Sound 1 / 2 / 3 / 4 / 5 |
 | M | Stop sound eksternal |
-| 6 / 7 / 8 / 9 / 0 | Video 1 / 2 / 3 / 4 / 5 |
+| 6 / 7 / 8 / 9 | Video + background + lagu 1 / 2 / 4 / 5 |
 | ESC | Skip video; jika tidak ada video, keluar seperti perilaku lama |
 | R | Toggle run mode |
 | Panah kiri / kanan (tahan) | Bergerak dan animasi lari saat run mode aktif |
@@ -75,17 +76,17 @@ Keyboard diabaikan ketika window lain memiliki fokus.
 | W | Toggle preview webcam |
 | D | Toggle kotak deteksi tangan |
 | U | Show/hide seluruh panel UI (status dan panduan); preview webcam tetap melalui W |
-| F12 atau ? (tombol /) | Toggle bantuan |
+| F12 atau ? (tombol /) | Toggle bantuan ketika UI sudah ditampilkan |
 | Q | Keluar, termasuk saat video |
 
-Fallback sound `Z X C V B` dan video `6 7 8 9 0` dipilih sebagai mapping aktual.
+Fallback sound `Z X C V B` dan video `6 7 8 9` dipilih sebagai mapping aktual.
 Kombinasi Ctrl/Shift tidak diperlukan. Gunakan angka di baris atas keyboard.
 
 **Perubahan konflik lama:** sebelumnya `1` = tas, `2` = buku, `0` = reset efek.
 Ketiganya sekarang mengikuti mapping pose/video yang diminta. Efek PNG tas dan
 buku terpisah tidak dipertahankan karena sumbernya di luar `FIX ASSET` dan tidak
 ada pengganti objek tas/buku terpisah di manifest baru. Visual Nando membawa tas
-tersedia melalui `R`; adegan ibu mengantar buku melalui `9`, dengan sound `V`.
+tersedia melalui `R`; adegan ibu mengantar buku melalui `8`, dengan sound `V`.
 `effect_animator.py` sekarang merender efek bola, tidur, lari, dan pelukan.
 
 ## 4. Hand tracking
@@ -101,7 +102,13 @@ tersedia melalui `R`; adegan ibu mengantar buku melalui `9`, dengan sound `V`.
   disimpan. Mengepal tetap dihitung sebagai tangan terdeteksi, bukan tangan hilang.
 - Saat startup dengan kamera, karakter tersembunyi sampai tangan terdeteksi.
   `--no-camera` adalah pengecualian eksplisit untuk preview keyboard: kedua
-  karakter tetap terlihat. Pose manual 1–5 pada mode kamera tetap mengikuti fade.
+  karakter tetap terlihat. Pose manual 1–5 juga tetap terlihat tanpa tangan.
+  Tekan angka pose yang sedang aktif lagi untuk fade-out; tekan lagi untuk muncul.
+  Angka lain memilih pose baru dan menampilkannya. Slot kosong tidak mengubah
+  visibilitas atau pose terakhir. Toggle dihitung per karakter dan bank aktif.
+  Tangan terdeteksi tidak memunculkan karakter yang di-hide dalam mode keyboard.
+  `G` keluar dari mode keyboard, termasuk preview tanpa kamera, dan mengembalikan
+  visibilitas ke deteksi tangan: tanpa tangan karakter fade-out, dengan tangan fade-in.
 - Setelah tes angka keyboard, tekan `G` untuk mengaktifkan pose gesture lagi.
 - `W` menampilkan kamera mini; `D` menampilkan kotak pada panggung.
 
@@ -157,26 +164,26 @@ lepaskan tombol, lalu tekan lagi. `M` menghentikan BGM. Tidak ada sleep penunggu
 audio di main loop. Kegagalan perangkat audio dilaporkan jelas saat startup;
 gunakan `--mute` hanya jika memang ingin pengujian tanpa suara.
 
-## 8. Video dengan audio internal
+## 8. Video, background, dan lagu otomatis
 
-| Tombol | File di Asset/Vid |
-|---|---|
-| 6 | vid1.mp4 |
-| 7 | vid2.mp4 |
-| 8 | Create_a_cinematic_second_.mp4 |
-| 9 | 3 nganter buku.mp4 |
-| 0 | 4 ending.mp4 |
+| Tombol | Video | Background | Lagu |
+|---|---|---|---|
+| 6 | vid1.mp4 | BG1 / F1 | 1 opening.mp3 |
+| 7 | vid2.mp4 | BG2 / F2 | 2 makan.mp3 |
+| 8 | 3 nganter buku.mp4 | BG4 / F4 | 4 ibu nganter buku.mp3 |
+| 9 | 4 ending.mp4 | BG5 / F5 | 5 pelukan ending.mp3 |
 
-Urutan mengikuti mapping eksplisit instruksi. Kelima file terdeteksi memiliki
-audio internal. OpenCV mendekode frame; PCM hasil ekstraksi FFmpeg dimainkan
-melalui `sounddevice` yang sama dengan BGM. Waktu audio, dikurangi latensi output,
-menjadi acuan frame video. Video mempertahankan aspect ratio dengan letterbox.
+Video lama `Create_a_cinematic_second_.mp4` tidak digunakan dan tidak lagi wajib
+pada validasi aset. File aslinya tetap disimpan. Tombol 0 tidak memutar video.
+Audio bawaan keempat video diganti dengan lagu MP3 pada tabel, sehingga tidak
+bertumpuk. Lagu dimulai dari awal bersama video dan **tetap berlanjut setelah
+video selesai atau di-skip**. Setelah kembali ke panggung, M dapat menghentikannya.
 
-Video menghentikan BGM, mengambil prioritas, dan menolak semua pemicu sound,
-video kedua, dan mode karakter selama berlangsung. BGM lama tidak dimulai ulang.
-`SPACE` pause/resume gambar dan audio, `ESC` skip. Pada akhir video, frame terakhir
-memudar ke panggung selama 0,45 detik. Webcam tetap dibaca selama video tetapi
-preview disembunyikan. `F`, `U`, bantuan, pause, skip, dan keluar tetap tersedia.
+Background dipilih ketika video berhasil dimulai, lalu terlihat ketika video
+selesai. Pemilihan ini mengikuti kostum AUTO; override MANUAL tetap dipertahankan.
+Hanya satu video aktif. Pemicu video berikutnya saat sedang bermain diabaikan,
+termasuk perubahan background/lagunya. SPACE pause/resume video dan lagu;
+ESC skip video. Video menjaga aspect ratio, lalu fade kembali ke panggung.
 
 ## 9. Lari
 
@@ -280,7 +287,7 @@ sama seperti toggle lainnya, sehingga menahan tombol tidak memicu berulang.
 Hanya Nando memiliki dua kostum: **SCHOOL** (`Nando Fix Animation/37–44.png`)
 dan **SPORT** (`FIX ASSET/Nando Olahraga/`). Kesembilan PNG olahraga dipakai
 dengan nama asli, dipreload saat startup, dan memakai cache resize yang sama.
-Validasi aset kini mencakup **60 file**, termasuk **50 PNG** dan 9 pose SPORT.
+Validasi aset kini mencakup **59 file**, termasuk **50 PNG** dan 9 pose SPORT.
 
 ### AUTO dan MANUAL
 
@@ -346,8 +353,8 @@ tersedia. Dari SPORT pose 9 ke SCHOOL, gunakan pose SCHOOL valid terakhir
 - **Hug:** Pelukan.png tetap override tunggal; H OFF kembali kostum aktif.
 - **Curtain:** P lalu F4 di AUTO mengganti ke SCHOOL di balik tirai. P lalu Y
   memilih kostum MANUAL tanpa mengubah animasi curtain.
-- **Video:** tidak mengubah kostum/BG atau mode AUTO/MANUAL. Setelah selesai
-  state panggung sebelumnya kembali. Voice tetap diblokir saat media berbunyi.
+- **Video:** memilih BG pasangan 1/2/4/5 melalui tombol 6/7/8/9. Kostum AUTO
+  mengikuti BG tersebut; MANUAL tetap dipertahankan. Voice diblokir saat media berbunyi.
 
 ## 17. UI dan panduan di layar
 
@@ -355,8 +362,9 @@ Panel status menampilkan latar, bank, pose, kostum AUTO/MANUAL, run, sleep, bola
 lock/balance, pelukan, serta nama audio/video. Tampilan memakai kartu gelap dengan
 aksen emas agar terbaca di berbagai latar.
 
-Saat startup, UI tersembunyi secara default. Tekan `U` untuk menampilkannya.
-`U` adalah tombol **show/hide seluruh UI**: status maupun panduan disembunyikan.
+Saat startup, UI tersembunyi secara default. `U` adalah satu-satunya tombol untuk
+menampilkan atau menyembunyikan UI. `F12`/`?` tidak dapat menampilkan UI dari
+kondisi tersembunyi; tombol tersebut hanya mengganti panduan ketika UI sudah aktif.
 Tekan U lagi untuk menampilkan kembali. Preview kamera terpisah, dikendalikan W.
 `F12` atau `?` membuka/menutup panduan; ketika dibuka, UI otomatis diaktifkan.
 Panduan menggantikan panel status dengan enam kelompok dalam dua kolom:

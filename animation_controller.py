@@ -24,6 +24,8 @@ class Character:
     candidate_time: float = 0.0
     alpha: float = 0.0
     balance_pending: bool = False
+    manual_visible: bool = False
+    manual_control: bool = False
 
 
 @dataclass
@@ -164,9 +166,29 @@ class AnimationController:
                 changed = True
         return changed  # Empty slots independently hold each character's last valid pose.
 
-    def debug_pose(self, finger):
-        self.manual_pose = True
-        self.select_pose(finger)
+    def debug_pose(self, finger, label=None):
+        pose = (self.animation_bank - 1) * 5 + finger
+        if not 1 <= finger <= 5:
+            return
+        for name in ([label] if label else self.characters):
+            char = self.characters[name]
+            limit = len(NANDO_COSTUMES[self.nando_costume]) if name == 'Right' else len(IBU)
+            if pose > limit:
+                continue  # An empty slot never hides the last valid pose.
+            hide = self.manual_pose and char.manual_control and char.manual_visible and char.pose == pose
+            self.select_pose(finger, name)
+            char.manual_control = True
+            # First keyboard selection always shows the requested character, even
+            # when no hand has ever been detected. Repeating the same combo hides it.
+            char.manual_visible = False if hide else True
+        self.manual_pose = any(c.manual_control for c in self.characters.values())
+
+    def use_gesture(self):
+        self.manual_pose = False
+        self.keyboard_preview = False
+        for char in self.characters.values():
+            char.manual_visible = False
+            char.manual_control = False
 
     def start_football(self):
         if self.football_active or self.hug_mode or self.paused:
@@ -189,7 +211,7 @@ class AnimationController:
         self.clock += dt
         detected = {item['label'] for item in hands}
         for label, char in self.characters.items():
-            visible = label in detected or self.keyboard_preview
+            visible = char.manual_visible if self.manual_pose and char.manual_control else (label in detected or self.keyboard_preview)
             char.alpha = max(0.0, min(1.0, char.alpha + dt/HAND_FADE_SECONDS*(1 if visible else -1)))
             if not visible:
                 char.candidate, char.candidate_time = 0, 0.0
@@ -213,7 +235,7 @@ class AnimationController:
                 elif not self.scale_locked:
                     char.y += (y2/cam_h - char.y) * smooth
                     char.height += (min(0.8, max(0.18, (y2-y1)*1.5/cam_h))-char.height)*smooth
-            if not self.manual_pose and not self.sleep_mode and not (label == "Right" and self.football_active):
+            if not (self.manual_pose and char.manual_control) and not self.sleep_mode and not (label == "Right" and self.football_active):
                 finger = item["count"]
                 if char.candidate != finger:
                     char.candidate, char.candidate_time = finger, 0.0

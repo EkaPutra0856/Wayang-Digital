@@ -12,6 +12,38 @@ from effect_animator import overlay
 
 
 class StateTests(unittest.TestCase):
+    def test_keyboard_visibility_toggle_and_return_to_detection(self):
+        state = AnimationController()
+        state.debug_pose(3)
+        for _ in range(4):
+            state.update(.1)
+        self.assertTrue(all(c.alpha == 1 for c in state.characters.values()))
+        state.debug_pose(3)
+        hands = [{'label': label, 'box': (100, 100, 200, 350), 'count': 2}
+                 for label in ('Left', 'Right')]
+        for _ in range(4):
+            state.update(.1, hands)
+        self.assertTrue(all(c.alpha == 0 for c in state.characters.values()))
+        state.debug_pose(3)
+        for _ in range(4):
+            state.update(.1)
+        self.assertTrue(all(c.alpha == 1 for c in state.characters.values()))
+        state.use_gesture()
+        for _ in range(4):
+            state.update(.1)
+        self.assertTrue(all(c.alpha == 0 for c in state.characters.values()))
+        for _ in range(4):
+            state.update(.1, hands)
+        self.assertTrue(all(c.alpha == 1 and c.pose == 2 for c in state.characters.values()))
+
+    def test_keyboard_combo_shows_character_without_prior_hand_detection(self):
+        state = AnimationController()
+        state.debug_pose(2, 'Right')
+        for _ in range(8):
+            state.update(.05)
+        self.assertEqual(state.characters['Right'].alpha, 1)
+        self.assertEqual(state.characters['Left'].alpha, 0)
+
     def test_missing_hands_fade_independently_and_return(self):
         state = AnimationController()
         hands = [{'label': label, 'box': (100, 100, 200, 350), 'count': 1}
@@ -192,7 +224,9 @@ class CostumeTests(unittest.TestCase):
         self.video = SimpleNamespace(video_playing=False)
 
     def keys(self, *keys):
-        handle_keys(set(keys), self.state, self.board, self.audio, self.video)
+        pressed = set(keys)
+        held = set(keys)
+        handle_keys(pressed, self.state, self.board, self.audio, self.video, held)
 
     def test_auto_backgrounds_keyboard_internal_and_voice_mapping(self):
         from voice_trigger import TRIGGER_KEYWORDS
@@ -224,7 +258,8 @@ class CostumeTests(unittest.TestCase):
         for bank in (1, 2):
             self.state.animation_bank = bank
             for finger in range(1, 6):
-                self.keys(str(finger))
+                self.keys('N', str(finger))
+                self.keys('I', str(finger))
                 pose = min(9, (bank-1)*5+finger)
                 self.assertEqual(self.state.get_nando_pose(), NANDO_SPORT[pose-1])
                 self.assertEqual(self.state.characters['Left'].pose, min(8, (bank-1)*5+finger))
@@ -234,7 +269,7 @@ class CostumeTests(unittest.TestCase):
 
     def test_same_logical_pose_switch_and_hidden_fade(self):
         self.state.animation_bank = 2
-        self.keys('2')
+        self.keys('N', '2')
         self.keys('Y')
         self.assertEqual(self.state.get_nando_pose(), NANDO[6])
         self.keys('Y')
@@ -415,7 +450,11 @@ class RenderTests(unittest.TestCase):
             state.show_hud = False
         state.show_help = False
         handle_keys({'F12'}, state, board, audio, video)
-        self.assertTrue(state.show_help and state.show_hud)
+        self.assertFalse(state.show_help and state.show_hud)
+        handle_keys({'U'}, state, board, audio, video)
+        self.assertTrue(state.show_hud)
+        handle_keys({'F12'}, state, board, audio, video)
+        self.assertTrue(state.show_help)
         handle_keys({'U'}, state, board, audio, video)
         self.assertFalse(state.show_hud)
 

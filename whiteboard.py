@@ -10,7 +10,7 @@ HELP_LINES = [
     "G: Return to finger poses    [: Previous BG    ]: Next BG",
     "F1-F5: Background 1-5",
     "Z X C V B: Sound 1-5         M: Stop sound",
-    "6 7 8 9 0: Video 1-5        ESC: Skip video / Quit outside video",
+    "6 7 8 9: Video + BG + song 1/2/4/5   ESC: Skip / Quit",
     "R: Run mode       LEFT / RIGHT (hold): Move Nando",
     "K: Football       T: Sleep       H: Pelukan",
     "P: Curtain        L: Lock size + horizontal only    S: Balance size",
@@ -114,15 +114,15 @@ class WhiteboardRenderer:
             cv2.line(card, (28, 85), (1072, 85), (65, 58, 48), 1)
             groups = [
                 ('01  KARAKTER & KOSTUM', [
-                    'TAB  Bank pose 1 / 2     1-5  Pose manual',
-                    'G  Kembali ke pose jari',
+                    'I+1-5  Ibu   N+1-5  Nando   TAB  Bank',
+                    'Ulang kombinasi: hide   G: mode jari',
                     'Y  Ganti kostum manual     J  Kostum AUTO',
                     'AUTO: BG1-2 SPORT / BG3-5 SCHOOL']),
                 ('02  LATAR & MEDIA', [
                     '[ / ]  Latar sebelumnya / berikutnya',
                     'F1-F5  Pilih latar langsung',
                     'Z X C V B  Audio 1-5     M  Stop audio',
-                    '6 7 8 9 0  Video 1-5     ESC  Skip / keluar']),
+                    '6 7 8 9  Video + BG/lagu 1/2/4/5']),
                 ('03  ANIMASI KHUSUS', [
                     'R  Lari looping     Panah  Arah & gerak',
                     'K  Tendang bola     T  Tidur / istirahat',

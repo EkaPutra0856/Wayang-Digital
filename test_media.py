@@ -1,7 +1,7 @@
 """Integration tests decode real media; no speaker, webcam or GUI is opened."""
 import unittest
 import numpy as np
-from asset_manager import SOUNDS, VIDEOS
+from asset_manager import SOUNDS, VIDEOS, VIDEO_CUES
 from audio_manager import AudioCache, AudioManager
 from video_manager import VideoManager
 
@@ -43,7 +43,7 @@ class MediaTests(unittest.TestCase):
                 self.assertTrue(self.video.play(path))
                 self.assertEqual(self.audio.current_sound, path)
                 self.assertFalse(self.video.play(path))
-                self.assertFalse(self.video.play(VIDEOS[(VIDEOS.index(path)+1)%5]))
+                self.assertFalse(self.video.play(VIDEOS[(VIDEOS.index(path)+1)%len(VIDEOS)]))
                 self.assertIsNotNone(self.cache.tracks[path])
                 self.audio.set_paused(True)
                 frame_before = self.video.frame.copy()
@@ -64,6 +64,33 @@ class MediaTests(unittest.TestCase):
                 self.video.stop()
                 self.assertFalse(self.video.video_playing)
                 self.assertIsNone(self.audio.current_sound)
+
+
+    def test_keyboard_cues_replace_internal_audio_and_continue_song(self):
+        from main import handle_keys
+        from animation_controller import AnimationController
+        from types import SimpleNamespace
+        state = AnimationController()
+        board = SimpleNamespace(set_fullscreen=lambda enabled: None)
+        out = np.zeros((1600, 2), np.int16)
+        for key, (path, bg, song) in VIDEO_CUES.items():
+            handle_keys({key}, state, board, self.audio, self.video)
+            self.assertEqual(self.video.current_video, path)
+            self.assertEqual(state.current_bg, bg)
+            self.assertEqual(self.audio.current_sound, song)
+            self.audio._callback(out, len(out), None, None)
+            cursor = self.audio.playback.cursor
+            handle_keys({key}, state, board, self.audio, self.video)
+            self.assertEqual(self.audio.playback.cursor, cursor)
+            for _ in range(600):
+                self.audio._callback(out, len(out), None, None)
+                self.video.update(1/30)
+                if not self.video.video_playing:
+                    break
+            self.assertFalse(self.video.video_playing)
+            self.assertEqual(self.audio.current_sound, song)
+        handle_keys({'0'}, state, board, self.audio, self.video)
+        self.assertFalse(self.video.video_playing)
 
 
 if __name__ == '__main__':
