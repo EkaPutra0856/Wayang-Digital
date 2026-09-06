@@ -40,15 +40,27 @@ def handle_keys(pressed, state, board, audio, video):
         board.set_fullscreen(state.fullscreen)
     if 'F12' in pressed or '?' in pressed:
         state.show_help = not state.show_help
+        if state.show_help:
+            state.show_hud = True
     for key, field in [('W', 'show_pip'), ('U', 'show_hud'), ('D', 'show_box')]:
         if key in pressed:
             setattr(state, field, not getattr(state, field))
+    if 'P' in pressed:
+        state.start_curtain()
     if video.video_playing:
         return True  # Cutscene owns visuals and audio; no queued surprise triggers.
     if 'M' in pressed:
         audio.stop()
     if state.paused:
         return True
+    if 'L' in pressed:
+        state.toggle_scale_lock()
+    if 'S' in pressed:
+        state.balance_scale()
+    if 'Y' in pressed:
+        state.toggle_nando_costume()
+    if 'J' in pressed:
+        state.set_costume_auto()
     if 'TAB' in pressed:
         state.toggle_bank()
     if 'G' in pressed:
@@ -57,11 +69,11 @@ def handle_keys(pressed, state, board, audio, video):
         if str(i) in pressed:
             state.debug_pose(i)
         if f'F{i}' in pressed:
-            state.current_bg = i-1
+            state.set_background(i-1)
     if '[' in pressed:
-        state.current_bg = (state.current_bg-1) % 5
+        state.set_background((state.current_bg-1) % 5)
     if ']' in pressed:
-        state.current_bg = (state.current_bg+1) % 5
+        state.set_background((state.current_bg+1) % 5)
     # Video wins if a sound and video key arrive together.
     for key, path in zip('67890', VIDEOS):
         if key in pressed:
@@ -112,7 +124,7 @@ def main(argv=None):
         cleanup.callback(audio.close)
         video = VideoManager(audio)
         cleanup.callback(video.close)
-        state = AnimationController(fullscreen=not args.windowed)
+        state = AnimationController(fullscreen=not args.windowed, keyboard_preview=args.no_camera)
         board = WhiteboardRenderer(assets, create_window=not args.headless)
         cleanup.callback(board.close)
         board.set_fullscreen(state.fullscreen)
@@ -168,7 +180,7 @@ def main(argv=None):
                 voice.set_enabled(not video.video_playing and not audio.sound_playing and not state.paused)
                 bg = voice.poll()
                 if bg is not None and voice.enabled and bg != state.current_bg:
-                    state.current_bg = bg
+                    state.set_background(bg)
                     print(f'[VOICE] Background -> {bg+1}')
             if args.mute:
                 # Advance the same PCM state for silent tests, without touching any device.

@@ -65,11 +65,16 @@ Keyboard diabaikan ketika window lain memiliki fokus.
 | K | Mulai sequence sepak bola |
 | T | Toggle mode tidur |
 | H | Toggle pelukan; tidak memulai sound otomatis |
+| P | Curtain: tutup, tahan 0,5 detik, buka ke kiri/kanan sambil fade-out |
+| L | Lock scale dan posisi vertikal; tangan hanya menggeser kiri/kanan |
+| S | Seimbangkan ukuran kedua karakter, lalu lock scale otomatis |
+| Y | Switch SCHOOL/SPORT Nando dan aktifkan kostum MANUAL |
+| J | Kembali ke kostum AUTO, langsung mengikuti background aktif |
 | SPACE | Pause/resume animasi, audio, video, dan posisi karakter |
 | F | Toggle fullscreen |
 | W | Toggle preview webcam |
 | D | Toggle kotak deteksi tangan |
-| U | Toggle HUD operator |
+| U | Show/hide seluruh panel UI (status dan panduan); preview webcam tetap melalui W |
 | F12 atau ? (tombol /) | Toggle bantuan |
 | Q | Keluar, termasuk saat video |
 
@@ -90,12 +95,20 @@ tersedia melalui `R`; adegan ibu mengantar buku melalui `9`, dengan sound `V`.
 - Tampilkan telapak dan 1–5 jari ke webcam. Hindari tangan terbalik ke bawah.
 - Posisi dan tinggi wayang mengikuti bounding box tangan dengan smoothing.
 - Jumlah jari harus stabil sekitar 120 ms sebelum mengubah pose.
-- Saat tangan hilang atau mengepal, posisi/pose terakhir dipertahankan untuk
-  mengurangi kedipan. Kedua karakter juga tersedia pada posisi awal tanpa tangan.
+- Saat tangan kanan hilang, Nando fade-out selama 0,35 detik; saat tangan kiri
+  hilang, Ibu fade-out sendiri. Jika kedua tangan hilang, kedua wayang menghilang.
+  Saat tangan kembali, wayang fade-in selama 0,35 detik. Pose terakhir tetap
+  disimpan. Mengepal tetap dihitung sebagai tangan terdeteksi, bukan tangan hilang.
+- Saat startup dengan kamera, karakter tersembunyi sampai tangan terdeteksi.
+  `--no-camera` adalah pengecualian eksplisit untuk preview keyboard: kedua
+  karakter tetap terlihat. Pose manual 1–5 pada mode kamera tetap mengikuti fade.
 - Setelah tes angka keyboard, tekan `G` untuk mengaktifkan pose gesture lagi.
 - `W` menampilkan kamera mini; `D` menampilkan kotak pada panggung.
 
 ## 5. Animation bank
+
+Tabel berikut adalah mapping **SCHOOL** dan Ibu. Startup BG1 memakai **SPORT**;
+lihat bagian Kostum Nando untuk mapping SPORT 1–9. Ibu tetap memiliki 8 pose.
 
 | Bank | Jari/tombol | Nando | Ibu |
 |---|---|---|---|
@@ -168,7 +181,9 @@ preview disembunyikan. `F`, `U`, bantuan, pause, skip, dan keluar tetap tersedia
 ## 9. Lari
 
 Tekan `R`, lalu tahan panah kiri/kanan. Nando memakai frame 45–49 pada 10 FPS,
-bergerak 420 piksel canvas per detik. Panah dilepas → frame dan posisi berhenti.
+bergerak 420 piksel canvas per detik. Selama R aktif, frame 45–49 selalu looping
+pada 10 FPS, termasuk ketika panah dilepas. Panah dilepas → hanya posisi berhenti;
+Nando tetap berlari di tempat. Timer berputar kontinu tanpa jeda khusus antar-cycle.
 Ke kiri menggunakan flip horizontal; gambar asli menghadap kanan.
 Posisi dibatasi dengan lebar maksimum sprite lari. Tangan tidak mengambil alih
 posisi Nando selama mode ini aktif. `R` lagi mengembalikan kendali posisi ke tangan.
@@ -184,7 +199,7 @@ saat keluar layar, mencapai bawah panggung, atau sequence selesai. Dapat diulang
 
 ## 11. Tidur
 
-`T` memakai **Nando 39.png** dan **Ibu 63.png**, dipilih setelah inspeksi karena
+`T` memakai **Nando SCHOOL 39.png**, **Nando SPORT 1 (3).png**, dan **Ibu 63.png**, dipilih setelah inspeksi karena
 mata tertutup. Tidak ada pose benar-benar tidur; gambar tersebut adalah pendekatan
 istirahat, masih dalam posisi berdiri. Tidak ada aset baru yang dibuat.
 Skala bernapas berkisar 0,985–1,015 dan gerak vertikal ±2 piksel. Pose gesture dan
@@ -231,7 +246,124 @@ sprite resize memakai cache LRU terbatas, transparansi dikomposit sebagai BGRA.
 - **Peringatan MediaPipe feedback tensors:** model berhasil dimuat pada pengujian;
   peringatan upstream dapat muncul di stderr tanpa menghentikan aplikasi.
 
-## 15. Pengujian dan referensi implementasi
+## 15. Curtain dan kontrol ukuran
+
+`P` memulai curtain merah prosedural tanpa file aset tambahan. Urutannya:
+menutup dari kiri/kanan selama 0,35 detik → **tertutup penuh selama 0,5 detik** →
+membuka ke sisi kiri/kanan sambil fade-out selama 0,65 detik. Curtain menutup
+seluruh layar termasuk HUD/preview, dan dapat dipakai di atas video. Tekan lagi
+saat transisi berjalan akan diabaikan. `SPACE` membekukan/melanjutkan curtain.
+Background/mode tetap dapat diganti di balik curtain melalui kontrol yang biasa;
+curtain tidak mengganti background atau sound secara otomatis.
+
+`L` mengunci tinggi dan posisi kaki kedua karakter pada posisi saat tombol ditekan.
+Ukuran ekstrem dijepit ke 25–65% tinggi panggung dan posisi kaki ke area yang wajar.
+Sesudah itu tangan hanya mengubah X (kiri/kanan): mendekat/menjauh dari webcam
+tidak lagi memperbesar/memperkecil wayang, dan gerakan tangan vertikal diabaikan.
+`L` lagi melepaskan lock. Pose jari dan fade ketika tangan hilang tetap berjalan.
+Animasi napas pada mode tidur tetap memiliki variasi skala kecil yang disengaja.
+
+`S` menyiapkan balancing untuk masing-masing tangan dan otomatis menyalakan lock.
+Ketika tangan terkait terdeteksi pada mode kontrol tangan, karakter secara halus
+menuju tinggi **46% panggung** dan posisi kaki **88% tinggi panggung**. Tangan yang
+belum terdeteksi tetap berstatus PENDING, sehingga dapat diseimbangkan bergantian.
+Setelah selesai ukurannya tetap terkunci; mendekat/menjauh tidak mengubahnya.
+Kedua karakter disamakan tinggi visualnya tanpa merusak aspect ratio PNG.
+Balancing menunggu sampai mode tidur/lari/football yang mengambil alih karakter
+dimatikan. `L` membatalkan balancing yang masih tertunda.
+
+HUD menampilkan `SCALE LOCK` dan `BALANCE`. Tombol P/L/S memakai deteksi edge yang
+sama seperti toggle lainnya, sehingga menahan tombol tidak memicu berulang.
+
+## 16. Kostum Nando
+
+Hanya Nando memiliki dua kostum: **SCHOOL** (`Nando Fix Animation/37–44.png`)
+dan **SPORT** (`FIX ASSET/Nando Olahraga/`). Kesembilan PNG olahraga dipakai
+dengan nama asli, dipreload saat startup, dan memakai cache resize yang sama.
+Validasi aset kini mencakup **60 file**, termasuk **50 PNG** dan 9 pose SPORT.
+
+### AUTO dan MANUAL
+
+Default startup BG1 adalah `COSTUME: SPORT [AUTO]`.
+
+| Background | Kostum AUTO |
+|---|---|
+| BG1 — Taman/lapangan | SPORT |
+| BG2 — Rumah/ruang makan | SPORT |
+| BG3 — Gerbang sekolah | SCHOOL |
+| BG4 — Kelas | SCHOOL |
+| BG5 — Koridor | SCHOOL |
+
+Aturan berlaku untuk F1–F5, [ / ], voice, dan pemanggilan internal
+`AnimationController.set_background(index)` (indeks 0–4). Perubahan background
+baru harus melalui fungsi ini, bukan assignment langsung ke `current_bg`.
+
+- `Y`: beralih SCHOOL ↔ SPORT dan menetapkan MANUAL. Ganti BG sesudahnya tidak
+  mengubah kostum. Contoh BG4 SCHOOL → Y → SPORT MANUAL → F5 tetap SPORT.
+- `J`: kembali AUTO dan langsung menyesuaikan BG aktif. Contoh BG5 SPORT MANUAL
+  → J → SCHOOL AUTO.
+- Y/J memakai edge-trigger; tidak berulang ketika ditahan. Keduanya diabaikan
+  selama pause/video, mengikuti kebijakan kontrol panggung existing.
+- Mode kostum MANUAL berbeda dengan pose MANUAL (1–5/G); gesture tetap dapat
+  digunakan ketika kostum dipilih secara manual.
+
+### Mapping SPORT
+
+| Bank | Jari / tombol | Pose | File di Nando Olahraga |
+|---|---|---|---|
+| 1 | 1 | 1 | 1 (1).png |
+| 1 | 2 | 2 | 1 (2).png |
+| 1 | 3 | 3 | 1 (3).png |
+| 1 | 4 | 4 | 1 (4).png |
+| 1 | 5 | 5 | 1 (5).png |
+| 2 | 1 | 6 | 1 (6).png |
+| 2 | 2 | 7 | 1 (7).png |
+| 2 | 3 | 8 | 1 (8).png |
+| 2 | 4 | 9 | 1 (9).png |
+| 2 | 5 | 10 kosong | Pertahankan pose SPORT valid terakhir |
+
+Gesture dan tombol angka memakai lookup yang sama. SPORT pose 9 tidak mengubah
+Ibu ke slot kosong: Ibu mempertahankan pose terakhirnya. Mapping SCHOOL/Ibu
+tetap seperti sebelumnya. Ganti kostum mempertahankan nomor pose logis bila
+tersedia. Dari SPORT pose 9 ke SCHOOL, gunakan pose SCHOOL valid terakhir
+(default pose 1 bila belum pernah dipilih); tidak menampilkan sprite kosong.
+
+### Kompatibilitas panggung
+
+- **Fade:** Y/J saat tangan hilang hanya mengubah kostum, tidak memunculkan Nando.
+  Tangan kembali → fade-in dengan kostum terbaru. Durasi tetap 0,35 detik.
+- **Lock/balance:** X, posisi kaki/Y, tinggi visual, alpha, dan status balance
+  tidak direset. PNG dipotong margin transparannya hanya di memori lalu dirender
+  dengan tinggi visual yang sama; aspect ratio masing-masing kostum dipertahankan.
+- **Run:** 45–49 masih memakai baju sekolah dan tas, hasil inspeksi aset.
+  Ini override visual sementara bahkan saat state SPORT; R OFF kembali SPORT.
+  Belum ada frame sport-run khusus, sehingga perubahan pakaian saat lari terlihat.
+- **Football:** pose Ball memakai pakaian olahraga sebagai animasi sementara.
+  Selesai K → kembali kostum aktif (SCHOOL maupun SPORT), tanpa mengganti mode.
+- **Sleep:** SPORT menggunakan **1 (3).png** karena mata tertutup dan gestur
+  santai; belum ada pose tidur berbaring. SCHOOL tetap 39.png, Ibu tetap 63.png.
+  Breathing 0,985–1,015 dan bob ±2 piksel tetap berjalan.
+- **Hug:** Pelukan.png tetap override tunggal; H OFF kembali kostum aktif.
+- **Curtain:** P lalu F4 di AUTO mengganti ke SCHOOL di balik tirai. P lalu Y
+  memilih kostum MANUAL tanpa mengubah animasi curtain.
+- **Video:** tidak mengubah kostum/BG atau mode AUTO/MANUAL. Setelah selesai
+  state panggung sebelumnya kembali. Voice tetap diblokir saat media berbunyi.
+
+## 17. UI dan panduan di layar
+
+Panel status menampilkan latar, bank, pose, kostum AUTO/MANUAL, run, sleep, bola,
+lock/balance, pelukan, serta nama audio/video. Tampilan memakai kartu gelap dengan
+aksen emas agar terbaca di berbagai latar.
+
+Saat startup, UI tersembunyi secara default. Tekan `U` untuk menampilkannya.
+`U` adalah tombol **show/hide seluruh UI**: status maupun panduan disembunyikan.
+Tekan U lagi untuk menampilkan kembali. Preview kamera terpisah, dikendalikan W.
+`F12` atau `?` membuka/menutup panduan; ketika dibuka, UI otomatis diaktifkan.
+Panduan menggantikan panel status dengan enam kelompok dalam dua kolom:
+karakter/kostum, latar/media, animasi, tampilan, ukuran/visibilitas, dan cara bermain.
+Ukuran panel mengikuti resolusi panggung. Curtain tetap berada di atas semua UI.
+
+## 18. Pengujian dan referensi implementasi
 
 Lihat `TESTING_CHECKLIST.md` untuk hasil aktual dan pemeriksaan manual yang tersisa.
 

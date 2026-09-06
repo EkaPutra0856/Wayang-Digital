@@ -2,7 +2,7 @@
 import math
 import cv2
 import numpy as np
-from asset_manager import NANDO, IBU, RUN, FOOTBALL, HUG
+from asset_manager import IBU, RUN, FOOTBALL, HUG
 
 
 def overlay(canvas, sprite, center_x, feet_y, alpha=1.0):
@@ -25,14 +25,14 @@ class EffectAnimator:
 
     def character_sprite(self, state, label, screen_h):
         char = state.characters[label]
-        path = (NANDO if label == "Right" else IBU)[char.pose-1]
+        path = state.get_nando_pose() if label == "Right" else IBU[char.pose-1]
         flip = False
         breath = 1.0
         if label == "Right" and state.football_active:
             path = FOOTBALL[(0, 1, 2, 3, 4, 0)[state.football_state]]
             flip = state.nando_facing < 0
         elif state.sleep_mode:
-            path = NANDO[2] if label == "Right" else IBU[5]
+            path = state.get_nando_pose(sleeping=True) if label == "Right" else IBU[5]
             breath = 1 + math.sin((state.clock-state.sleep_start_time)*2)*0.015
         elif label == "Right" and state.run_mode:
             path = RUN[state.run_frame]
@@ -52,9 +52,9 @@ class EffectAnimator:
             sprite = self.character_sprite(state, label, h)
             breathing = state.sleep_mode and not (label == "Right" and state.football_active)
             bob = math.sin((state.clock-state.sleep_start_time)*2)*2 if breathing else 0
-            overlay(canvas, sprite, char.x*w, char.y*h+bob)
+            overlay(canvas, sprite, char.x*w, char.y*h+bob, char.alpha)
         if state.ball.active:
-            ball = self.assets.sprite(FOOTBALL[5], h*0.075)
+            ball = self.assets.sprite(FOOTBALL[5], h*0.12)
             bh, bw = ball.shape[:2]
             size = math.ceil(math.hypot(bw, bh))
             matrix = cv2.getRotationMatrix2D((bw/2, bh/2), -state.ball.angle, 1)

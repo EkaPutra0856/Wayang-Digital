@@ -5,10 +5,16 @@ webcam, speaker, arah tangan fisik, dan kenyamanan animasi oleh operator.
 
 ## Hasil otomatis
 
+- [x] Update kostum — 9 PNG SPORT ditemukan/dipreload tanpa rename; manifest total 60 aset.
+- [x] Suite terbaru: 26 tes lulus, termasuk 7 tes kostum dan 2 tes UI/run-loop tambahan.
+
+- [x] PASS — 5 tes tambahan fade independen, lock X-only, balancing tertunda,
+  curtain hold/pause/anti-spam, dan coverage/render curtain; total suite kini 17 tes.
+
 - [x] PASS — syntax seluruh modul aplikasi melalui `py_compile`.
 - [x] PASS — import seluruh modul aplikasi.
 - [x] PASS — `python -m pip check`: tidak ada dependensi rusak.
-- [x] PASS — seluruh 51 aset wajib ada; 41 PNG berhasil didekode dengan alpha sprite.
+- [x] PASS — seluruh 60 aset wajib ada; 50 PNG berhasil didekode dengan alpha sprite.
 - [x] PASS — startup `main.py --headless --no-camera --no-voice --mute --frames 5` dan cleanup.
 - [x] PASS — validasi aset dijalankan dari direktori kerja lain.
 - [x] PASS — MediaPipe memuat model dan memproses frame sintetis.
@@ -39,7 +45,7 @@ suara terdengar dari speaker. Webcam sintetis bukan pengujian gesture manusia.
 - [ ] Tangan kanan fisik mengontrol Nando sesuai mapping mirror existing.
 - [ ] Tangan kiri fisik mengontrol Ibu.
 - [ ] Gerakan dan perubahan pose tidak berkedip berlebihan.
-- [ ] Tangan hilang mempertahankan posisi/pose terakhir.
+- [ ] Tangan hilang membuat karakter terkait fade-out; kembali terdeteksi → fade-in.
 - [x] Data Right/Left memilih pose karakter yang sesuai (otomatis).
 
 ## 03 — Bank 1
@@ -91,7 +97,8 @@ suara terdengar dari speaker. Webcam sintetis bukan pengujian gesture manusia.
 
 - [x] Gerakan memakai delta time, posisi setara pada 30 dan 60 FPS.
 - [x] Kiri/kanan mengubah facing dan membatasi posisi.
-- [x] Release direction menghentikan frame cycle dan mempertahankan posisi.
+- [x] Release direction mempertahankan posisi; frame tetap looping selama R aktif.
+- [x] Tiga putaran beruntun melewati frame 4 → 0 tanpa menghentikan timer.
 - [ ] R memperlihatkan RUN ON/OFF.
 - [ ] Menahan panah kiri/kanan menjalankan cycle 45–49 dengan arah benar.
 - [ ] R OFF mengembalikan kendali posisi ke tangan.
@@ -138,6 +145,62 @@ suara terdengar dari speaker. Webcam sintetis bukan pengujian gesture manusia.
 - [ ] Tutup window saat video aktif: capture dan kanal audio dibersihkan.
 
 ## Batas pengujian
+
+### Kostum Nando: hasil otomatis dan uji operator
+
+- [x] Compileall, pip check, validasi aset dan startup headless 10 frame lulus.
+- [x] Smoke GUI tanpa kamera/voice 90 frame: exit 0, tanpa audio underrun.
+- [x] Smoke GUI dengan webcam, tanpa voice, 90 frame: kamera terbuka dan exit 0.
+  Gesture manusia dan mikrofon tidak diverifikasi pada smoke ini.
+
+- [x] F1/F2 → SPORT; F3/F4/F5 → SCHOOL; startup SPORT AUTO.
+- [x] [ / ] wrap-around dan fungsi background internal mengikuti AUTO.
+- [x] Indeks hasil mapping voice diproses lewat set_background yang sama.
+- [x] Y dua arah menetapkan MANUAL; ganti BG mempertahankan override.
+- [x] J langsung mengikuti BG aktif dan kembali AUTO.
+- [x] SPORT Bank1 1–5 dan Bank2 6–9 memilih nama PNG yang benar.
+- [x] SPORT slot 10 mempertahankan pose 9, Ibu slot 9/10 tetap pose valid terakhir.
+- [x] SCHOOL Bank1/2 tetap 37–44.png; Ibu tetap 58–65.png.
+- [x] Angka keyboard, TAB, dan G/gesture sintetis mengikuti kostum.
+- [x] SCHOOL pose 7 ↔ SPORT pose 7; SPORT pose 9 → fallback SCHOOL valid.
+- [x] Switch saat alpha nol tidak membuat karakter muncul; fade kembali memakai kostum terbaru.
+- [x] Lock/balance mempertahankan tinggi, X/Y, kaki dan status balance saat switch.
+- [x] Render semua pose SCHOOL/SPORT 1–8 menghasilkan tinggi piksel yang sama.
+- [x] Run/football/sleep/hug/video tidak mengganti permanent costume state.
+- [x] Sleep lookup SPORT 1 (3).png dan SCHOOL 39.png benar.
+- [x] Curtain + auto/manual costume tetap bekerja.
+- [ ] Uji tombol fisik Y/J (termasuk ditahan), TAB dan 1–5 pada window.
+- [ ] Uji semua 9 pose SPORT dengan jari manusia, termasuk Bank2 jari4/jari5.
+- [ ] Ucapkan pergantian latar via mikrofon dan periksa kostum AUTO.
+- [ ] Amati fade/lock/balance saat mendekatkan dan menjauhkan tangan secara nyata.
+- [ ] Amati pakaian sementara pada run/football lalu kembali ke kostum sebelumnya.
+
+Tes otomatis menggunakan gesture sintetis dan handler keyboard. Pengamatan
+operator atas ekspresi/proporsi serta pengenalan ucapan nyata tetap perlu latihan lokal.
+
+### Tambahan: fade, curtain, dan scale
+
+- [x] UI show/hide menyembunyikan panel status dan panduan bersamaan.
+- [x] Panduan dirender pada 640x360, 1280x720, 1920x1080 tanpa error.
+- [x] F12 mengaktifkan UI saat membuka panduan; U menyembunyikannya kembali.
+- [x] Inspeksi render panduan 1280x720: dua kolom rapi dan teks tidak terpotong.
+- [ ] Uji kenyamanan loop lari dan UI terbaru pada proyektor/perangkat pertunjukan.
+
+- [x] Tidak ada tangan pada startup → alpha kedua karakter nol.
+- [x] Tangan kanan/kiri hilang secara independen → fade 0,35 detik hingga nol.
+- [x] Tangan terdeteksi kembali → alpha naik secara bertahap.
+- [x] L mempertahankan tinggi/Y saat bounding box berubah ukuran dan posisi vertikal.
+- [x] L OFF mengembalikan perubahan ukuran dari gesture.
+- [x] S menunggu tangan terkait, menyeimbangkan tinggi ke 46%, lalu mengunci.
+- [x] Curtain tertutup penuh 0,5 detik, freeze saat pause, menolak trigger ganda.
+- [x] Curtain menutup semua piksel (termasuk lebar ganjil), membuka dari tengah.
+- [ ] Coba P/L/S secara fisik, termasuk menahan tombol dan menggunakan saat curtain aktif.
+- [ ] Pastikan transisi/fade halus di panggung dengan pencahayaan kamera sebenarnya.
+- [ ] Dekatkan/jauhkan tangan setelah L/S: ukuran dan posisi kaki tetap, hanya X berubah.
+- [ ] --no-camera tetap dapat menampilkan karakter untuk tes pose keyboard.
+
+Pengujian otomatis fitur tambahan lulus. Interaksi manusia dengan webcam untuk
+fitur tambahan belum diverifikasi secara langsung.
 
 Belum ada klaim verifikasi gesture manusia, pengenalan suara nyata, persepsi
 sinkronisasi speaker, atau target 30 FPS di hardware pertunjukan. Lengkapi kotak

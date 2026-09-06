@@ -14,13 +14,16 @@ VIDEOS = [ASSET_ROOT / "Asset/Vid" / name for name in (
     "vid1.mp4", "vid2.mp4", "Create_a_cinematic_second_.mp4",
     "3 nganter buku.mp4", "4 ending.mp4")]
 NANDO = [ASSET_ROOT / "Nando Fix Animation" / f"{i}.png" for i in range(37, 45)]
+NANDO_SPORT = [ASSET_ROOT / "Nando Olahraga" / f"1 ({i}).png" for i in range(1, 10)]
+NANDO_COSTUMES = {'SCHOOL': NANDO, 'SPORT': NANDO_SPORT}
+NANDO_SLEEP = {'SCHOOL': NANDO[2], 'SPORT': NANDO_SPORT[2]}
 IBU = [ASSET_ROOT / "Ibu" / f"{i}.png" for i in range(58, 66)]
 RUN = [ASSET_ROOT / "side with bag" / f"{i}.png" for i in range(45, 50)]
 FOOTBALL = [ASSET_ROOT / "Ball" / name for name in (
     "1 without ball.png", "1 with ball.png", "2 with ball.png",
     "3 with ball.png", "3 without ball.png", "ball.png")]
 HUG = ASSET_ROOT / "Asset/Pelukan.png"
-GROUPS = {"Backgrounds": BACKGROUNDS, "Nando poses": NANDO, "Ibu poses": IBU,
+GROUPS = {"Backgrounds": BACKGROUNDS, "Nando poses": NANDO, "Nando SPORT poses": NANDO_SPORT, "Ibu poses": IBU,
           "Run frames": RUN, "Football sprites": FOOTBALL, "Sounds": SOUNDS,
           "Videos": VIDEOS, "Pelukan": [HUG]}
 
@@ -29,7 +32,9 @@ class AssetManager:
     def __init__(self):
         missing = [p for group in GROUPS.values() for p in group if not p.is_file()]
         if missing:
-            raise FileNotFoundError("\n".join(f"[ASSET ERROR] Missing: {p}" for p in missing))
+            raise FileNotFoundError("\n".join(
+                f"[ASSET ERROR] Nando SPORT pose {NANDO_SPORT.index(p)+1} missing: {p}"
+                if p in NANDO_SPORT else f"[ASSET ERROR] Missing: {p}" for p in missing))
         self.images = {}
         self.cache = OrderedDict()
         for name, group in GROUPS.items():

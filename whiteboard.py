@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from asset_manager import BACKGROUNDS
 from effect_animator import EffectAnimator
+from animation_controller import CURTAIN_CLOSE, CURTAIN_OPEN
 
 HELP_LINES = [
     "TAB: Bank 1/2       1-5: Manual pose (both characters)",
@@ -12,6 +13,8 @@ HELP_LINES = [
     "6 7 8 9 0: Video 1-5        ESC: Skip video / Quit outside video",
     "R: Run mode       LEFT / RIGHT (hold): Move Nando",
     "K: Football       T: Sleep       H: Pelukan",
+    "P: Curtain        L: Lock size + horizontal only    S: Balance size",
+    "Y: Nando costume MANUAL     J: AUTO (BG1-2 SPORT, BG3-5 SCHOOL)",
     "SPACE: Pause/resume (animation + audio + video)",
     "F: Fullscreen     W: Webcam preview     D: Hand boxes",
     "U: HUD            F12 or ?: Help        Q: Quit",
@@ -44,6 +47,7 @@ class WhiteboardRenderer:
         self.previous_bg = None
         self.bg_changed_at = 0.0
         self.bg_index = None
+        self.curtain_texture = None
         if create_window:
             cv2.namedWindow(window_name, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
             cv2.resizeWindow(window_name, 1280, 720)
@@ -53,6 +57,125 @@ class WhiteboardRenderer:
         if self.create_window:
             cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN,
                                   cv2.WINDOW_FULLSCREEN if enabled else cv2.WINDOW_NORMAL)
+
+    def render_curtain(self, canvas, state):
+        if state.curtain_phase == 'idle':
+            return
+        h, w = canvas.shape[:2]
+        half = (w+1)//2
+        if self.curtain_texture is None or self.curtain_texture.shape[:2] != (h, half):
+            # Procedural fabric folds, no new external image asset.
+            x = np.linspace(0, 12*np.pi, half, dtype=np.float32)
+            shade = (0.65 + 0.25*np.cos(x) + 0.1*np.cos(2*x))[None, :, None]
+            vertical = np.linspace(1.0, 0.7, h, dtype=np.float32)[:, None, None]
+            self.curtain_texture = (shade*vertical*np.array([40, 30, 150])).astype(np.uint8)
+        alpha = 1.0
+        if state.curtain_phase == 'closing':
+            progress = min(1.0, state.curtain_timer/CURTAIN_CLOSE)
+            amount = progress*progress*(3-2*progress)
+        elif state.curtain_phase == 'opening':
+            progress = min(1.0, state.curtain_timer/CURTAIN_OPEN)
+            amount = 1-progress*progress*(3-2*progress)
+            alpha = 1-progress
+        else:
+            amount = 1.0
+        count = min(half, max(0, round(half*amount)))
+        if count:
+            left = self.curtain_texture[:, half-count:]
+            right = left[:, ::-1]
+            canvas[:, :count] = (left*alpha+canvas[:, :count]*(1-alpha)).astype(np.uint8)
+            canvas[:, w-count:] = (right*alpha+canvas[:, w-count:]*(1-alpha)).astype(np.uint8)
+
+    @staticmethod
+    def ui_text(card, text, x, y, size=0.52, color=(210, 218, 230)):
+        cv2.putText(card, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX,
+                    size, color, 1, cv2.LINE_AA)
+
+    @staticmethod
+    def place_card(canvas, card, x, y, scale):
+        card = cv2.resize(card, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        h, w = card.shape[:2]
+        roi = canvas[y:y+h, x:x+w]
+        roi[:] = cv2.addWeighted(roi, 0.05, card, 0.95, 0)
+
+    def render_ui(self, canvas, state, audio, video):
+        if not state.show_hud:
+            return
+        h, w = canvas.shape[:2]
+        scale = min(w/1280, h/720)
+        put = self.ui_text
+        if state.show_help:
+            card = np.full((600, 1100, 3), (27, 23, 20), np.uint8)
+            cv2.rectangle(card, (0, 0), (1099, 599), (92, 76, 48), 1)
+            cv2.rectangle(card, (0, 0), (6, 599), (130, 200, 245), -1)
+            put(card, 'PANDUAN PANGGUNG', 28, 40, .88, (240, 245, 250))
+            put(card, 'Wayang Interaktif  |  Nando & Ibu', 29, 66, .49)
+            put(card, 'F12  Tutup panduan     U  Sembunyikan UI', 675, 42, .48, (130, 200, 245))
+            cv2.line(card, (28, 85), (1072, 85), (65, 58, 48), 1)
+            groups = [
+                ('01  KARAKTER & KOSTUM', [
+                    'TAB  Bank pose 1 / 2     1-5  Pose manual',
+                    'G  Kembali ke pose jari',
+                    'Y  Ganti kostum manual     J  Kostum AUTO',
+                    'AUTO: BG1-2 SPORT / BG3-5 SCHOOL']),
+                ('02  LATAR & MEDIA', [
+                    '[ / ]  Latar sebelumnya / berikutnya',
+                    'F1-F5  Pilih latar langsung',
+                    'Z X C V B  Audio 1-5     M  Stop audio',
+                    '6 7 8 9 0  Video 1-5     ESC  Skip / keluar']),
+                ('03  ANIMASI KHUSUS', [
+                    'R  Lari looping     Panah  Arah & gerak',
+                    'K  Tendang bola     T  Tidur / istirahat',
+                    'H  Pelukan (audio dipilih terpisah)',
+                    'P  Curtain: tutup, tahan 0.5 dtk, buka']),
+                ('04  KONTROL TAMPILAN', [
+                    'SPACE  Pause / resume seluruh animasi',
+                    'F  Fullscreen     W  Preview webcam',
+                    'U  Show / hide UI     D  Kotak deteksi',
+                    'F12 atau ?  Panduan     Q  Keluar']),
+                ('05  UKURAN & VISIBILITAS', [
+                    'L  Kunci ukuran + tinggi; gerak kiri-kanan',
+                    'S  Seimbangkan ukuran, lalu kunci',
+                    'Tangan hilang: fade-out 0.35 detik',
+                    'Tangan kembali: fade-in kostum aktif']),
+                ('06  CARA MEMAINKAN', [
+                    'Tangan kanan: Nando / tangan kiri: Ibu',
+                    'Tahan pose jari sebentar agar stabil',
+                    'Lepas panah: diam di tempat, lari tetap loop',
+                    'Slot pose kosong: tahan pose sebelumnya']),
+            ]
+            for i, (title, lines) in enumerate(groups):
+                x = 29+(i % 2)*540
+                y = 119+(i//2)*151
+                put(card, title, x, y, .53, (130, 200, 245))
+                for j, line in enumerate(lines):
+                    put(card, line, x, y+27+j*24, .48)
+            put(card, 'Klik window Wayang untuk fokus keyboard. Tekan dan lepaskan tombol toggle sebelum mengulang.',
+                29, 580, .46, (160, 169, 182))
+            self.place_card(canvas, card, round((w-1100*scale)/2), round((h-600*scale)/2), scale)
+            return
+        card = np.full((260, 390, 3), (27, 23, 20), np.uint8)
+        cv2.rectangle(card, (0, 0), (389, 259), (92, 76, 48), 1)
+        cv2.rectangle(card, (0, 0), (4, 259), (130, 200, 245), -1)
+        put(card, 'WAYANG  /  OPERATOR', 17, 30, .60, (240, 245, 250))
+        put(card, 'PAUSED' if state.paused else 'LIVE', 300, 30, .49,
+            (100, 180, 255) if state.paused else (160, 230, 130))
+        put(card, f'BG {state.current_bg+1}/5  |  BANK {state.animation_bank}/2  |  '+
+            ('POSE MANUAL' if state.manual_pose else 'GESTURE'), 17, 59, .45)
+        cv2.line(card, (17, 71), (373, 71), (65, 58, 48), 1)
+        sound = audio.current_sound
+        rows = [
+            f'Kostum   {state.nando_costume} / {state.costume_mode}',
+            f'Pose      Nando {state.characters["Right"].pose}   Ibu {state.characters["Left"].pose}',
+            f'Run {"ON" if state.run_mode else "OFF"}   Sleep {"ON" if state.sleep_mode else "OFF"}   Ball {"PLAY" if state.football_active else "READY"}',
+            f'Lock {"ON" if state.scale_locked else "OFF"}   Balance {"PENDING" if any(c.balance_pending for c in state.characters.values()) else "READY"}   Hug {"ON" if state.hug_mode else "OFF"}',
+            'Audio  '+(sound.stem[:35] if sound else 'NONE'),
+            'Video  '+(video.current_video.stem[:35] if video.current_video else 'NONE'),
+        ]
+        for i, line in enumerate(rows):
+            put(card, line, 17, 95+i*23, .46)
+        put(card, 'F12  Panduan penggunaan     U  Hide UI', 17, 246, .44, (130, 200, 245))
+        self.place_card(canvas, card, round(14*scale), round(14*scale), scale)
 
     def _background(self, state, size):
         key = (state.current_bg, size)
@@ -106,19 +229,8 @@ class WhiteboardRenderer:
                 canvas[y:y+pip_h, x:x+pip_w] = preview
                 cv2.rectangle(canvas, (x, y), (x+pip_w, y+pip_h),
                               (0, 0, 255) if state.paused else (255, 255, 255), 2)
-        if state.show_hud:
-            sound = audio.current_sound
-            lines = [
-                f"BANK: {state.animation_bank}/2   BG: {state.current_bg+1}/5   {'PAUSED' if state.paused else 'LIVE'}",
-                f"POSE NANDO: {state.characters['Right'].pose}   IBU: {state.characters['Left'].pose}   {'MANUAL (G: gesture)' if state.manual_pose else 'GESTURE'}",
-                f"RUN: {'ON' if state.run_mode else 'OFF'}   SLEEP: {'ON' if state.sleep_mode else 'OFF'}   BALL: {'PLAYING' if state.football_active else 'READY'}",
-                f"AUDIO: {sound.stem if sound else 'NONE'}",
-                f"VIDEO: {video.current_video.stem if video.current_video else 'NONE'}",
-                f"ENDING: {'PELUKAN' if state.hug_mode else 'OFF'}   F12: HELP",
-            ]
-            self.panel(canvas, lines, scale=max(0.35, min(0.55, w/2400)))
-        if state.show_help:
-            self.panel(canvas, HELP_LINES, (12, max(155, h//3)), max(0.35, min(0.58, w/2000)))
+        self.render_ui(canvas, state, audio, video)
+        self.render_curtain(canvas, state)
         if self.create_window:
             cv2.imshow(self.window_name, canvas)
         return canvas

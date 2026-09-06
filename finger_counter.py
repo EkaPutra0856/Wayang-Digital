@@ -32,6 +32,7 @@ class HandDetector:
         if not model_path.is_file():
             raise FileNotFoundError(f"[MODEL ERROR] Missing: {model_path}")
         self.latest_result = None
+        self.result_received_at = 0.0
         self.last_timestamp = -1
         options = HandLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=str(model_path)),
@@ -46,6 +47,7 @@ class HandDetector:
 
     def _callback(self, result, output_image, timestamp_ms):
         self.latest_result = result
+        self.result_received_at = time.monotonic()
 
     def _get_distance(self, p1, p2):
         return math.hypot(p1[0] - p2[0], p1[1] - p2[1])
@@ -109,9 +111,10 @@ class HandDetector:
         hand_boxes = []
         counts = {"Left": None, "Right": None}
 
-        if self.latest_result and self.latest_result.hand_landmarks and self.latest_result.handedness:
+        result = self.latest_result if time.monotonic()-self.result_received_at < 0.25 else None
+        if result and result.hand_landmarks and result.handedness:
             raw_candidates = []
-            for landmarks, handedness in zip(self.latest_result.hand_landmarks, self.latest_result.handedness):
+            for landmarks, handedness in zip(result.hand_landmarks, result.handedness):
                 raw_label = handedness[0].category_name
                 score = handedness[0].score
                 # Balik label karena efek mirror kamera
