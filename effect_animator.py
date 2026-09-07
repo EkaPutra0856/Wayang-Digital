@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 from asset_manager import IBU, RUN, FOOTBALL, HUG
 
+IBU_SCALE = 1  
+
 
 def overlay(canvas, sprite, center_x, feet_y, alpha=1.0):
     """BGRA over BGR, clipped at all four screen edges."""
@@ -37,7 +39,13 @@ class EffectAnimator:
         elif label == "Right" and state.run_mode:
             path = RUN[state.run_frame]
             flip = state.nando_facing < 0
-        return self.assets.sprite(path, char.height*screen_h*breath, flip)
+        elif char.manual_control or state.keyboard_preview:
+            # Gentle idle breathing, offset per character so they do not move
+            # in sync. The shared clock also freezes this motion when paused.
+            phase = 0.0 if label == "Left" else 1.4
+            breath = 1 + math.sin(state.clock * (2 * math.pi / 3.6) + phase) * 0.012
+        size_scale = IBU_SCALE if label == "Left" else 1.0
+        return self.assets.sprite(path, char.height*screen_h*breath*size_scale, flip)
 
     def render(self, canvas, state):
         h, w = canvas.shape[:2]
