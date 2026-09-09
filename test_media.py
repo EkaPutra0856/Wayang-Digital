@@ -76,12 +76,16 @@ class MediaTests(unittest.TestCase):
         for key, (path, bg, song) in VIDEO_CUES.items():
             handle_keys({key}, state, board, self.audio, self.video)
             self.assertEqual(self.video.current_video, path)
+            self.assertEqual(state.curtain_phase, 'closing')
+            self.assertEqual(state.curtain_timer, 0.0)
+            state.update(.1, video_playing=True)
             self.assertEqual(state.current_bg, bg)
             self.assertEqual(self.audio.current_sound, song)
             self.audio._callback(out, len(out), None, None)
             cursor = self.audio.playback.cursor
             handle_keys({key}, state, board, self.audio, self.video)
             self.assertEqual(self.audio.playback.cursor, cursor)
+            self.assertAlmostEqual(state.curtain_timer, .1)
             for _ in range(600):
                 self.audio._callback(out, len(out), None, None)
                 self.video.update(1/30)
@@ -90,7 +94,8 @@ class MediaTests(unittest.TestCase):
             self.assertFalse(self.video.video_playing)
             self.assertEqual(self.audio.current_sound, song)
         handle_keys({'0'}, state, board, self.audio, self.video)
-        self.assertFalse(self.video.video_playing)
+        self.assertEqual(self.video.current_video.name, 'scene 3.mp4')
+        self.assertEqual(state.current_bg, 2)
 
 
 if __name__ == '__main__':

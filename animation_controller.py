@@ -10,7 +10,7 @@ FOOTBALL_DURATIONS = (0.25, 0.35, 0.35, 0.16, 1.6, 0.3)
 HAND_FADE_SECONDS = 0.35
 BALANCED_HEIGHT = 0.46
 CURTAIN_CLOSE = 0.35
-CURTAIN_HOLD = 0.5
+CURTAIN_HOLD = 2.5
 CURTAIN_OPEN = 0.65
 GESTURE_HEIGHT_FACTOR = {'Right': 1.05, 'Left': 1.50}
 GESTURE_Y_OFFSET = {'Right': 0.03, 'Left': 0.0}
@@ -43,7 +43,7 @@ class Ball:
 
 @dataclass
 class AnimationController:
-    animation_bank: int = 1
+    animation_banks: dict = field(default_factory=lambda: {'Right': 1, 'Left': 1})
     current_bg: int = 0
     characters: dict = field(default_factory=lambda: {
         # Stage framing: Ibu stays farther left; Nando is slightly higher and
@@ -99,7 +99,7 @@ class AnimationController:
         if not 1 <= char.pose <= len(NANDO_COSTUMES[costume]):
             char.pose = self.last_costume_pose[costume]
             if not 1 <= char.pose <= len(NANDO_COSTUMES[costume]):
-                char.pose = 6 if self.animation_bank == 2 else 1
+                char.pose = 6 if self.animation_banks['Right'] == 2 else 1
         self.last_costume_pose[costume] = char.pose
         if previous != (self.nando_costume, self.costume_mode):
             print(f'[COSTUME] {costume} ({self.costume_mode}, BG{self.current_bg+1})')
@@ -134,8 +134,8 @@ class AnimationController:
             char.balance_pending = True
         print('[SCALE] Balance to 46% stage height when hands are detected; lock ON')
 
-    def start_curtain(self):
-        if self.paused or self.curtain_phase != 'idle':
+    def start_curtain(self, restart=False):
+        if self.paused or (self.curtain_phase != 'idle' and not restart):
             return False
         self.curtain_phase, self.curtain_timer = 'closing', 0.0
         return True
@@ -152,15 +152,16 @@ class AnimationController:
         if self.curtain_phase == 'idle':
             self.curtain_timer = 0.0
 
-    def toggle_bank(self):
-        self.animation_bank = 3 - self.animation_bank
-        print(f"[MODE] Animation Bank -> {self.animation_bank}")
+    def toggle_bank(self, label):
+        self.animation_banks[label] = 3 - self.animation_banks[label]
+        self.characters[label].candidate_time = 0.0
+        print(f"[MODE] {label} Animation Bank -> {self.animation_banks[label]}")
 
     def select_pose(self, finger, label=None):
-        pose = (self.animation_bank - 1) * 5 + finger
         changed = False
         if 1 <= finger <= 5:
             for name in ([label] if label else self.characters):
+                pose = (self.animation_banks[name] - 1) * 5 + finger
                 limit = len(NANDO_COSTUMES[self.nando_costume]) if name == 'Right' else len(IBU)
                 if not 1 <= pose <= limit:
                     continue
@@ -171,10 +172,10 @@ class AnimationController:
         return changed  # Empty slots independently hold each character's last valid pose.
 
     def debug_pose(self, finger, label=None):
-        pose = (self.animation_bank - 1) * 5 + finger
         if not 1 <= finger <= 5:
             return
         for name in ([label] if label else self.characters):
+            pose = (self.animation_banks[name] - 1) * 5 + finger
             char = self.characters[name]
             limit = len(NANDO_COSTUMES[self.nando_costume]) if name == 'Right' else len(IBU)
             if pose > limit:

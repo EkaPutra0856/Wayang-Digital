@@ -6,11 +6,11 @@ from effect_animator import EffectAnimator
 from animation_controller import CURTAIN_CLOSE, CURTAIN_OPEN
 
 HELP_LINES = [
-    "TAB: Bank 1/2       1-5: Manual pose (both characters)",
+    "A: Nando set 1/2   E: Ibu set 1/2   N/I+1-5: Pose",
     "G: Return to finger poses    [: Previous BG    ]: Next BG",
     "F1-F5: Background 1-5",
     "Z X C V B: Sound 1-5         M: Stop sound",
-    "6 7 8 9: Video + BG + song 1/2/4/5   ESC: Skip / Quit",
+    "6 7 0 8 9: Video + BG + song 1/2/3/4/5   ESC: Skip / Quit",
     "R: Run mode       LEFT / RIGHT (hold): Move Nando",
     "K: Football       T: Sleep       H: Pelukan",
     "P: Curtain        L: Lock size + horizontal only    S: Balance size",
@@ -114,7 +114,7 @@ class WhiteboardRenderer:
             cv2.line(card, (28, 85), (1072, 85), (65, 58, 48), 1)
             groups = [
                 ('01  KARAKTER & KOSTUM', [
-                    'I+1-5  Ibu   N+1-5  Nando   TAB  Bank',
+                    'I+1-5  Ibu   N+1-5  Nando   A/E  Set N/I',
                     'Ulang kombinasi: hide   G: mode jari',
                     'Y  Ganti kostum manual     J  Kostum AUTO',
                     'AUTO: BG1-2 SPORT / BG3-5 SCHOOL']),
@@ -122,12 +122,12 @@ class WhiteboardRenderer:
                     '[ / ]  Latar sebelumnya / berikutnya',
                     'F1-F5  Pilih latar langsung',
                     'Z X C V B  Audio 1-5     M  Stop audio',
-                    '6 7 8 9  Video + BG/lagu 1/2/4/5']),
+                    '6 7 0 8 9  Video + BG/lagu 1/2/3/4/5']),
                 ('03  ANIMASI KHUSUS', [
                     'R  Lari looping     Panah  Arah & gerak',
                     'K  Tendang bola     T  Tidur / istirahat',
                     'H  Pelukan (audio dipilih terpisah)',
-                    'P  Curtain: tutup, tahan 0.5 dtk, buka']),
+                    'P  Tirai 2.5 dtk; otomatis saat video']),
                 ('04  KONTROL TAMPILAN', [
                     'SPACE  Pause / resume seluruh animasi',
                     'F  Fullscreen     W  Preview webcam',
@@ -142,7 +142,7 @@ class WhiteboardRenderer:
                     'Tangan kanan: Nando / tangan kiri: Ibu',
                     'Tahan pose jari sebentar agar stabil',
                     'Lepas panah: diam di tempat, lari tetap loop',
-                    'Slot pose kosong: tahan pose sebelumnya']),
+                    'SPORT Bank 2: N+5 / 5 jari = salam']),
             ]
             for i, (title, lines) in enumerate(groups):
                 x = 29+(i % 2)*540
@@ -160,7 +160,7 @@ class WhiteboardRenderer:
         put(card, 'WAYANG  /  OPERATOR', 17, 30, .60, (240, 245, 250))
         put(card, 'PAUSED' if state.paused else 'LIVE', 300, 30, .49,
             (100, 180, 255) if state.paused else (160, 230, 130))
-        put(card, f'BG {state.current_bg+1}/5  |  BANK {state.animation_bank}/2  |  '+
+        put(card, f'BG {state.current_bg+1}/5  |  SET N{state.animation_banks["Right"]} I{state.animation_banks["Left"]}  |  '+
             ('POSE MANUAL' if state.manual_pose else 'GESTURE'), 17, 59, .45)
         cv2.line(card, (17, 71), (373, 71), (65, 58, 48), 1)
         sound = audio.current_sound

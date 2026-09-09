@@ -4,3 +4,17 @@ __pycache__/
 *.zip
 .media_cache/
 tes/
+
+# Web build and local development
+node_modules/
+dist/
+.vercel/
+public/media/
+public/models/
+public/vision/
+src/generated/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example

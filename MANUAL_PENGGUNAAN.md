@@ -51,7 +51,8 @@ Keyboard diabaikan ketika window lain memiliki fokus.
 
 | Tombol | Fungsi |
 |---|---|
-| TAB | Ganti bank 1 ↔ 2 untuk kedua karakter |
+| A | Ganti set animasi Nando 1 / 2 |
+| E | Ganti set animasi Ibu 1 / 2 |
 | I + 1–5 | Pose manual Ibu; kombinasi yang sama lagi = hide Ibu |
 | N + 1–5 | Pose manual Nando; kombinasi yang sama lagi = hide Nando |
 | G | Kembali ke pose gesture untuk kedua karakter |
@@ -59,14 +60,14 @@ Keyboard diabaikan ketika window lain memiliki fokus.
 | F1–F5 | Langsung background 1–5 |
 | Z / X / C / V / B | Sound 1 / 2 / 3 / 4 / 5 |
 | M | Stop sound eksternal |
-| 6 / 7 / 8 / 9 | Video + background + lagu 1 / 2 / 4 / 5 |
+| 6 / 7 / 0 / 8 / 9 | Video + background + lagu 1 / 2 / 3 / 4 / 5 |
 | ESC | Skip video; jika tidak ada video, keluar seperti perilaku lama |
 | R | Toggle run mode |
 | Panah kiri / kanan (tahan) | Bergerak dan animasi lari saat run mode aktif |
 | K | Mulai sequence sepak bola |
 | T | Toggle mode tidur |
 | H | Toggle pelukan; tidak memulai sound otomatis |
-| P | Curtain: tutup, tahan 0,5 detik, buka ke kiri/kanan sambil fade-out |
+| P | Curtain: tutup, tahan 2,5 detik, buka ke kiri/kanan sambil fade-out |
 | L | Lock scale dan posisi vertikal; tangan hanya menggeser kiri/kanan |
 | S | Seimbangkan ukuran kedua karakter, lalu lock scale otomatis |
 | Y | Switch SCHOOL/SPORT Nando dan aktifkan kostum MANUAL |
@@ -79,7 +80,7 @@ Keyboard diabaikan ketika window lain memiliki fokus.
 | F12 atau ? (tombol /) | Buka panduan dengan UI; menutup panduan sekaligus menyembunyikan UI |
 | Q | Keluar, termasuk saat video |
 
-Fallback sound `Z X C V B` dan video `6 7 8 9` dipilih sebagai mapping aktual.
+Fallback sound `Z X C V B` dan video `6 7 0 8 9` dipilih sebagai mapping aktual.
 Kombinasi Ctrl/Shift tidak diperlukan. Gunakan angka di baris atas keyboard.
 
 **Perubahan konflik lama:** sebelumnya `1` = tas, `2` = buku, `0` = reset efek.
@@ -129,7 +130,7 @@ lihat bagian Kostum Nando untuk mapping SPORT 1–9. Ibu tetap memiliki 8 pose.
 | 2 | 3 (pose 8) | 44.png | 65.png |
 | 2 | 4–5 (slot 9–10) | Pertahankan pose valid terakhir | Pertahankan pose valid terakhir |
 
-`TAB` mengganti bank global. Bank dan pose normal terakhir ditampilkan dalam HUD.
+`A` mengganti set Nando dan `E` mengganti set Ibu secara independen. `TAB` tidak lagi mengganti set animasi. Bank dan pose normal terakhir ditampilkan dalam HUD.
 Saat mode khusus aktif, indikator RUN/SLEEP/BALL/ENDING menjelaskan override visual.
 
 ## 6. Background dan voice
@@ -256,7 +257,7 @@ sprite resize memakai cache LRU terbatas, transparansi dikomposit sebagai BGRA.
 ## 15. Curtain dan kontrol ukuran
 
 `P` memulai curtain merah prosedural tanpa file aset tambahan. Urutannya:
-menutup dari kiri/kanan selama 0,35 detik → **tertutup penuh selama 0,5 detik** →
+menutup dari kiri/kanan selama 0,35 detik → **tertutup penuh selama 2,5 detik** →
 membuka ke sisi kiri/kanan sambil fade-out selama 0,65 detik. Curtain menutup
 seluruh layar termasuk HUD/preview, dan dapat dipakai di atas video. Tekan lagi
 saat transisi berjalan akan diabaikan. `SPACE` membekukan/melanjutkan curtain.
@@ -285,9 +286,9 @@ sama seperti toggle lainnya, sehingga menahan tombol tidak memicu berulang.
 ## 16. Kostum Nando
 
 Hanya Nando memiliki dua kostum: **SCHOOL** (`Nando Fix Animation/37–44.png`)
-dan **SPORT** (`FIX ASSET/Nando Olahraga/`). Kesembilan PNG olahraga dipakai
+dan **SPORT** (`FIX ASSET/Nando Olahraga/`). Kesepuluh PNG olahraga dipakai
 dengan nama asli, dipreload saat startup, dan memakai cache resize yang sama.
-Validasi aset kini mencakup **59 file**, termasuk **50 PNG** dan 9 pose SPORT.
+Validasi aset kini mencakup **61 file**, termasuk **51 PNG** dan 10 pose SPORT.
 
 ### AUTO dan MANUAL
 
@@ -327,7 +328,7 @@ baru harus melalui fungsi ini, bukan assignment langsung ke `current_bg`.
 | 2 | 2 | 7 | 1 (7).png |
 | 2 | 3 | 8 | 1 (8).png |
 | 2 | 4 | 9 | 1 (9).png |
-| 2 | 5 | 10 kosong | Pertahankan pose SPORT valid terakhir |
+| 2 | 5 | 10 (Salam) | salam.png |
 
 Gesture dan tombol angka memakai lookup yang sama. SPORT pose 9 tidak mengubah
 Ibu ke slot kosong: Ibu mempertahankan pose terakhirnya. Mapping SCHOOL/Ibu
@@ -353,7 +354,7 @@ tersedia. Dari SPORT pose 9 ke SCHOOL, gunakan pose SCHOOL valid terakhir
 - **Hug:** Pelukan.png tetap override tunggal; H OFF kembali kostum aktif.
 - **Curtain:** P lalu F4 di AUTO mengganti ke SCHOOL di balik tirai. P lalu Y
   memilih kostum MANUAL tanpa mengubah animasi curtain.
-- **Video:** memilih BG pasangan 1/2/4/5 melalui tombol 6/7/8/9. Kostum AUTO
+- **Video:** memilih BG pasangan 1/2/3/4/5 melalui tombol 6/7/0/8/9. Kostum AUTO
   mengikuti BG tersebut; MANUAL tetap dipertahankan. Voice diblokir saat media berbunyi.
 
 ## 17. UI dan panduan di layar
@@ -390,3 +391,10 @@ python -m pip check
 Backend mengikuti API [sounddevice OutputStream](https://python-sounddevice.readthedocs.io/en/0.5.3/api/streams.html),
 [FFmpeg stream mapping](https://ffmpeg.org/ffmpeg.html), dan
 [GetAsyncKeyState Windows](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getasynckeystate).
+
+
+## Tambahan salam dan scene 3
+
+- Salam: kostum SPORT, Bank 2 Nando (A), N+5 atau lima jari tangan kanan. Ulang N+5 untuk sembunyikan; G kembali ke gesture.
+- Tombol 0: scene 3.mp4 + BG3 + lagu 3 brangkat sekolah.mp3. Tombol 6/7/8/9 tetap scene 1/2/4/5.
+- Setiap video berhasil diputar, tirai otomatis memulai ulang: menutup 0,35 detik, tertutup penuh 2,5 detik, membuka 0,65 detik. Video dan lagu tetap berjalan; SPACE menjeda semuanya.

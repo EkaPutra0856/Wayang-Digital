@@ -12,6 +12,31 @@ from effect_animator import overlay
 
 
 class StateTests(unittest.TestCase):
+    def test_independent_bank_keys_and_gesture_mapping(self):
+        state = AnimationController()
+        video = SimpleNamespace(video_playing=False)
+        handle_keys({'A'}, state, None, None, video)
+        self.assertEqual(state.animation_banks, {'Right': 2, 'Left': 1})
+        state.debug_pose(3)
+        self.assertEqual(state.characters['Right'].pose, 8)
+        self.assertEqual(state.characters['Left'].pose, 3)
+        state.use_gesture()
+        hands = [{'label': label, 'count': 2, 'box': (100, 100, 200, 350)}
+                 for label in ('Right', 'Left')]
+        for _ in range(6):
+            state.update(.05, hands)
+        self.assertEqual(state.characters['Right'].pose, 7)
+        self.assertEqual(state.characters['Left'].pose, 2)
+        handle_keys({'E'}, state, None, None, video)
+        self.assertEqual(state.animation_banks, {'Right': 2, 'Left': 2})
+        handle_keys({'TAB'}, state, None, None, video)
+        self.assertEqual(state.animation_banks, {'Right': 2, 'Left': 2})
+        handle_keys({'A'}, state, None, None, video)
+        self.assertEqual(state.animation_banks, {'Right': 1, 'Left': 2})
+        state.paused = True
+        handle_keys({'E'}, state, None, None, video)
+        self.assertEqual(state.animation_banks, {'Right': 1, 'Left': 2})
+
     def test_keyboard_visibility_toggle_and_return_to_detection(self):
         state = AnimationController()
         state.debug_pose(3)
@@ -112,7 +137,7 @@ class StateTests(unittest.TestCase):
         state.update(.1)
         self.assertAlmostEqual(state.curtain_timer, 0)
         state.paused = False
-        for _ in range(4):
+        for _ in range(24):
             state.update(.1, video_playing=True)
         self.assertEqual(state.curtain_phase, 'closed')
         state.update(.1)
@@ -125,7 +150,7 @@ class StateTests(unittest.TestCase):
         state = AnimationController()
         state.set_background(2)  # Existing SCHOOL and Ibu mapping remains 8 poses.
         for bank in (1, 2):
-            state.animation_bank = bank
+            state.animation_banks = {'Right': bank, 'Left': bank}
             for finger in range(1, 6):
                 previous = state.characters['Right'].pose
                 state.debug_pose(finger)
@@ -266,13 +291,13 @@ class CostumeTests(unittest.TestCase):
         self.keys('Y')
         self.assertEqual(self.state.nando_costume, 'SCHOOL')
 
-    def test_sport_nine_poses_and_independent_empty_ibu_slot(self):
+    def test_sport_ten_poses_and_independent_empty_ibu_slot(self):
         for bank in (1, 2):
-            self.state.animation_bank = bank
+            self.state.animation_banks = {'Right': bank, 'Left': bank}
             for finger in range(1, 6):
                 self.keys('N', str(finger))
                 self.keys('I', str(finger))
-                pose = min(9, (bank-1)*5+finger)
+                pose = (bank-1)*5+finger
                 self.assertEqual(self.state.get_nando_pose(), NANDO_SPORT[pose-1])
                 self.assertEqual(self.state.characters['Left'].pose, min(8, (bank-1)*5+finger))
         self.keys('Y')  # SPORT pose 9 -> last valid SCHOOL pose, never None.
@@ -280,7 +305,7 @@ class CostumeTests(unittest.TestCase):
         self.assertLessEqual(self.state.characters['Right'].pose, 8)
 
     def test_same_logical_pose_switch_and_hidden_fade(self):
-        self.state.animation_bank = 2
+        self.state.animation_banks = {'Right': 2, 'Left': 2}
         self.keys('N', '2')
         self.keys('Y')
         self.assertEqual(self.state.get_nando_pose(), NANDO[6])
@@ -416,7 +441,7 @@ class RenderTests(unittest.TestCase):
         audio = SimpleNamespace(current_sound=None)
         video = SimpleNamespace(video_playing=False, fade_frame=None, current_video=None)
         for bank in (1, 2):
-            state.animation_bank = bank
+            state.animation_banks = {'Right': bank, 'Left': bank}
             for finger in range(1, 6):
                 state.debug_pose(finger)
                 frame = board.render((960, 540), None, [], state, audio, video)

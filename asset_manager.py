@@ -13,12 +13,14 @@ SOUNDS = [ASSET_ROOT / "Asset/Sound" / name for name in (
 VIDEOS = [ASSET_ROOT / "Asset/Vid" / name for name in (
     "vid1.mp4", "vid2.mp4",
     "3 nganter buku.mp4", "4 ending.mp4")]
+VIDEOS.append(ASSET_ROOT / "Asset/Vid/scene 3.mp4")
 VIDEO_CUES = {
     key: (video, scene, SOUNDS[scene])
-    for key, video, scene in zip('6789', VIDEOS, (0, 1, 3, 4))
+    for key, video, scene in zip('67890', VIDEOS, (0, 1, 3, 4, 2))
 }
 NANDO = [ASSET_ROOT / "Nando Fix Animation" / f"{i}.png" for i in range(37, 45)]
 NANDO_SPORT = [ASSET_ROOT / "Nando Olahraga" / f"1 ({i}).png" for i in range(1, 10)]
+NANDO_SPORT.append(ASSET_ROOT / "Nando Olahraga/salam.png")
 NANDO_COSTUMES = {'SCHOOL': NANDO, 'SPORT': NANDO_SPORT}
 NANDO_SLEEP = {'SCHOOL': NANDO[2], 'SPORT': NANDO_SPORT[2]}
 IBU = [ASSET_ROOT / "Ibu" / f"{i}.png" for i in range(58, 66)]

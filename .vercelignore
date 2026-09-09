@@ -1,0 +1,19 @@
+node_modules
+.media_cache
+__pycache__
+.git
+.vscode
+test-results
+playwright-report
+dist
+public/media
+public/vision
+public/models
+src/generated
+Animasi Wayang
+Effect
+Latar
+not used
+*.py
+*.zip
+requirements.txt

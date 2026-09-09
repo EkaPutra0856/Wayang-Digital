@@ -63,8 +63,10 @@ def handle_keys(pressed, state, board, audio, video, held=None):
         state.toggle_nando_costume()
     if 'J' in pressed:
         state.set_costume_auto()
-    if 'TAB' in pressed:
-        state.toggle_bank()
+    if 'A' in pressed:
+        state.toggle_bank('Right')
+    if 'E' in pressed:
+        state.toggle_bank('Left')
     if 'G' in pressed:
         state.use_gesture()
     for i in range(1, 6):
@@ -84,6 +86,7 @@ def handle_keys(pressed, state, board, audio, video, held=None):
         if key in pressed:
             if video.play(path, soundtrack=soundtrack):
                 state.set_background(background)
+                state.start_curtain(restart=True)
             return True
     for key, path in zip('ZXCVB', SOUNDS):
         if key in pressed:
