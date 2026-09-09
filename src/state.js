@@ -5,7 +5,7 @@ export const SCENES = [
   {name:'Kelas', subtitle:'Buku dari Ibu', key:'8', soundKey:'V'},
   {name:'Koridor', subtitle:'Pelukan penutup', key:'9', soundKey:'B'},
 ];
-export const CURTAIN = { closing:0.35, closed:2.5, opening:0.65 };
+export const CURTAIN = { closing:0.35, closed:1, opening:0.65 };
 export const SCALE_FACTORS = [1, 1.25, 1.5];
 const KICK = [0.25,0.35,0.35,0.16,1.6,0.3];
 export const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));

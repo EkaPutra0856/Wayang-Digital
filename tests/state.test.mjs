@@ -13,12 +13,12 @@ test('salam is selectable in bank 2 and costume fallback stays valid',()=>{
  s.setCostume('school');assert.equal(s.characters.Right.pose,1);
  s.setCostume('sport');s.pose(5,'Right');assert.equal(s.sprite('Right'),'sport10');
 });
-test('curtain closes, holds 2.5 seconds, freezes during pause and opens during video',()=>{
+test('curtain closes, holds 1 second, freezes during pause and opens before video',()=>{
  const s=new ShowState();s.curtain();s.videoPlaying=true;
  s.update(.35);assert.equal(s.curtainPhase,'closed');
- s.update(2.49);assert.equal(s.curtainPhase,'closed');
+ s.update(.99);assert.equal(s.curtainPhase,'closed');
  s.paused=true;s.update(100);assert.equal(s.curtainPhase,'closed');
- s.paused=false;s.update(.02);assert.equal(s.curtainPhase,'opening');
+ s.paused=false;s.update(.03);assert.equal(s.curtainPhase,'opening');
  s.update(.65);assert.equal(s.curtainPhase,'idle');
 });
 test('duplicate curtain does not restart, new video can explicitly restart',()=>{

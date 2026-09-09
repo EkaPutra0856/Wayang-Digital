@@ -42,7 +42,7 @@ document.querySelector('#app').innerHTML=`
         </section>
         <section class="cue-bar"><div class="cue-title"><span class="cue-icon">${icon('play')}</span><div><strong id="cue-title">Transisi · Taman</strong><span id="media-status">Siap dimainkan</span></div></div><div class="cue-actions">${button('video',icon('play')+'<span>Putar transisi</span>','6','class="primary" id="play-video"')}${button('sound',icon('sound')+'<span>Putar lagu</span>','Z','id="play-sound"')}${button('skip',icon('stop'),'','class="icon-button" aria-label="Lewati video" title="Lewati video (Esc)" id="skip-video"')}</div></section>
         <div class="playback-track"><span id="playback-progress"></span></div>
-        <div class="stage-tip">${icon('curtain')} Tirai otomatis menutup pada setiap transisi. Tertutup 2,5 detik, lalu terbuka kembali.</div>
+        <div class="stage-tip">${icon('curtain')} Tirai otomatis menutup pada setiap transisi. Tertutup 1 detik, lalu terbuka sebelum video dimulai.</div>
       </div>
       <aside class="controls" aria-label="Kontrol pertunjukan">
         <div class="control-heading"><h2>Ruang kendali</h2><span class="pill">LIVE STUDIO</span></div>
@@ -74,7 +74,7 @@ document.querySelector('#app').innerHTML=`
   <dialog id="help"><div class="dialog-heading"><div class="eyebrow">PANDUAN PANGGUNG</div><button data-action="close-help" aria-label="Tutup panduan">×</button></div><h2>Siap menjadi dalang?</h2><p>Pilih adegan dan tekan <strong>Putar transisi</strong>. Gunakan pose dan animasi untuk melanjutkan ceritanya.</p>
   <div class="help-grid">
     <section><h3>Karakter & gerakan</h3><p><kbd>N</kbd> + <kbd>1–5</kbd> Nando · <kbd>I</kbd> + <kbd>1–5</kbd> Ibu<br><kbd>A</kbd> set Nando / <kbd>E</kbd> set Ibu (1 / 2) · ulang pose untuk sembunyikan<br><kbd>G</kbd> mode jari · <kbd>Y</kbd> ganti kostum · <kbd>J</kbd> otomatis<br><kbd>R</kbd> lari · <kbd>← →</kbd> bergerak · <kbd>K</kbd> bola<br><kbd>T</kbd> tidur · <kbd>H</kbd> pelukan · <kbd>+</kbd> / <kbd>-</kbd> ukuran 100/125/150% (kedua karakter)<br><kbd>L</kbd> kunci tinggi · <kbd>S</kbd> ukuran normal</p><p><strong>Salam:</strong> SPORT, Bank 2, N+5. Tombol Salam langsung menyiapkannya.</p></section>
-    <section><h3>Latar & media</h3><p><kbd>F1–F5</kbd> pilih latar · <kbd>[ ]</kbd> sebelumnya / berikutnya<br><kbd>6 7 0 8 9</kbd> transisi adegan 1–5 + latar + lagu<br><kbd>Z X C V B</kbd> lagu 1–5 · <kbd>M</kbd> hentikan lagu<br><kbd>P</kbd> tirai · <kbd>SPACE</kbd> jeda semua<br><kbd>ESC</kbd> lewati video / keluar fullscreen<br><kbd>F</kbd> fullscreen · <kbd>U</kbd> fokus panggung · <kbd>Q</kbd> akhiri sesi</p><p>Tirai menutup 0,35 detik, tertutup penuh 2,5 detik, lalu membuka 0,65 detik. Video tetap berjalan di balik tirai.</p></section>
+    <section><h3>Latar & media</h3><p><kbd>F1–F5</kbd> pilih latar · <kbd>[ ]</kbd> sebelumnya / berikutnya<br><kbd>6 7 0 8 9</kbd> transisi adegan 1–5 + latar + lagu<br><kbd>Z X C V B</kbd> lagu 1–5 · <kbd>M</kbd> hentikan lagu<br><kbd>P</kbd> tirai · <kbd>SPACE</kbd> jeda semua<br><kbd>ESC</kbd> lewati video / keluar fullscreen<br><kbd>F</kbd> fullscreen · <kbd>U</kbd> fokus panggung · <kbd>Q</kbd> akhiri sesi</p><p>Tirai menutup 0,35 detik, tertutup penuh 1 detik, lalu membuka 0,65 detik. Video dimulai setelah tirai terbuka.</p></section>
     <section><h3>Kamera & suara</h3><p>Izin kamera wajib sebelum masuk. Jika kamera mati atau izin dicabut, akses terkunci kembali. Tangan kanan mengontrol Nando; kiri mengontrol Ibu. Tampilkan telapak dengan 1–5 jari. Titik dan garis pelacak serta jumlah jari ditampilkan di preview kamera. Tanpa tangan, karakter memudar. Jarak tangan tidak mengubah ukuran karakter.</p><p><kbd>W</kbd> preview kamera · <kbd>D</kbd> kotak tangan. Kamera dan mikrofon membutuhkan HTTPS atau localhost. Suara: “taman”, “rumah”, “sekolah”, “kelas”, “koridor”.</p></section>
     <section><h3>Tips pertunjukan</h3><p>Gunakan Chrome atau Edge desktop untuk kontrol lengkap. Semua adegan dan pose juga bisa dipilih dengan tombol layar. Mode suara bergantung dukungan browser dan koneksi internet.</p><p>Tekan <strong>Fokus panggung</strong> atau <strong>Layar penuh</strong> untuk pertunjukan. Saat tab ditinggalkan, pertunjukan otomatis dijeda. Aktifkan Lanjut saat kembali.</p></section>
   </div><button data-action="close-help" class="primary">Mengerti, kembali ke panggung</button></dialog>
@@ -86,7 +86,7 @@ let state=new ShowState(),started=false,loaded=false,selected='Right',showPrevie
 const held=new Set(),canvas=$('#canvas'),stage=$('#stage'),video=$('#cutscene'),audio=$('#soundtrack');
 const renderer=new Renderer(canvas,assets);
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').hidden=true,7000);}
-const media=new MediaController(video,audio,assets,()=>{state.videoPlaying=media.active;sync();},toast);
+const media=new MediaController(video,audio,assets,()=>{state.videoPlaying=media.active;sync();},toast,()=>{if(!state.paused)state.curtain(true);});
 const camera=new CameraController($('#webcam'),()=>{
   if(!camera.ready&&started)lockAccess();
   if(camera.ready&&!state.gesture)state.useGesture();
@@ -174,7 +174,7 @@ async function dispatch(action,value) {
   if(action==='close-help'){$('#help').close();return;}
   if(action==='focus'){focusMode=!focusMode;setFocus();return;}
   if(action==='fullscreen'){await fullscreen();return;}
-  if(action==='pause'){if(media.loading){toast('Tunggu video selesai dimuat.');return;}state.paused=!state.paused;await media.pause(state.paused);sync();return;}
+  if(action==='pause'){state.paused=!state.paused;await media.pause(state.paused);sync();return;}
   if(action==='skip'){media.stop();sync();return;}
   if(action==='end'){media.dispose();camera.stop();voice.stop();state=new ShowState();started=false;$('#welcome').hidden=false;$('#start').textContent='Izinkan kamera & masuk';focusMode=false;setFocus();if(document.fullscreenElement)await document.exitFullscreen();sync();return;}
   if(action==='preview'){showPreview=!showPreview;sync();return;}
@@ -185,10 +185,18 @@ async function dispatch(action,value) {
   if(action==='character'){selected=value;sync();return;}
   if(state.paused){toast('Lanjutkan pertunjukan untuk mengubah adegan atau animasi.');return;}
   if(action==='curtain'){state.curtain();sync();return;}
+  if(action==='video'&&state.curtainPhase!=='idle'){toast('Tunggu tirai selesai bergerak.');return;}
   if(media.active||media.loading){toast('Lewati atau tunggu video selesai untuk mengubah panggung.');return;}
   switch(action) {
     case 'scene':state.setScene(Number(value));break;
-    case 'video':await media.playVideo(value===undefined?state.scene:Number(value),()=>{state.setScene(media.scene);const paused=state.paused;state.paused=false;state.curtain(true);state.paused=paused;if(paused)media.pause(true);});break;
+    case 'video': {
+      state.curtain(true);
+      const waitForCurtain=async()=>{
+        while(state.curtainPhase!=='idle')await new Promise(resolve=>setTimeout(resolve,16));
+      };
+      await media.playVideo(value===undefined?state.scene:Number(value),()=>{state.setScene(media.scene);if(state.paused)media.pause(true);},waitForCurtain);
+      break;
+    }
     case 'sound':await media.playSound(value===undefined?state.scene:Number(value));break;
     case 'bank':state.toggleBank(value);break;
     case 'pose':state.pose(Number(value),selected);break;

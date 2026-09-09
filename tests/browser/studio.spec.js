@@ -33,7 +33,7 @@ test('every transition key plays real video, changes scene, triggers curtain and
    await page.locator('#stage').focus();await page.keyboard.press('Digit'+key);
    await expect(page.locator('#stage')).toHaveAttribute('data-scene',String(index));
    await expect(page.locator('#play-video')).toContainText('Sedang diputar');
-   await expect(page.locator('#stage')).toHaveAttribute('data-curtain',/closing|closed/);
+  await expect(page.locator('#stage')).toHaveAttribute('data-curtain','idle');
    expect(await page.locator('#cutscene').evaluate(v=>v.videoWidth)).toBeGreaterThan(0);
    const before=await page.locator('#cutscene').evaluate(v=>v.currentTime);
    await page.keyboard.press('Digit'+key);
@@ -43,19 +43,14 @@ test('every transition key plays real video, changes scene, triggers curtain and
  }
  await page.locator('[data-action="stop-sound"]').click();
 });
-test('curtain holds for 2.5 seconds and pause freezes both curtain and video',async({page})=>{
+test('curtain holds for 1 second and video waits until curtain opens',async({page})=>{
  await start(page);await page.keyboard.press('Digit0');
  await expect(page.locator('#stage')).toHaveAttribute('data-curtain','closed');
- await page.keyboard.press('Space');
- await expect(page.locator('#stage')).toHaveAttribute('data-paused','true');
- const t=await page.locator('#cutscene').evaluate(v=>v.currentTime);
+ expect(await page.locator('#cutscene').evaluate(v=>v.currentTime)).toBe(0);
  await page.waitForTimeout(700);
- expect(await page.locator('#cutscene').evaluate(v=>v.currentTime)).toBeCloseTo(t,1);
- await expect(page.locator('#stage')).toHaveAttribute('data-curtain','closed');
- await page.keyboard.press('Space');
- await page.waitForTimeout(1500);
- await expect(page.locator('#stage')).toHaveAttribute('data-curtain','closed');
+ expect(await page.locator('#cutscene').evaluate(v=>v.currentTime)).toBe(0);
  await expect(page.locator('#stage')).toHaveAttribute('data-curtain','idle',{timeout:5000});
+ await expect.poll(()=>page.locator('#cutscene').evaluate(v=>v.currentTime)).toBeGreaterThan(0);
  await page.keyboard.press('Escape');
 });
 test('camera denial blocks the entire studio and keyboard shortcuts',async({page})=>{
