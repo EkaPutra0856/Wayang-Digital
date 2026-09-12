@@ -8,7 +8,7 @@ from animation_controller import CURTAIN_CLOSE, CURTAIN_OPEN
 HELP_LINES = [
     "A: Nando set 1/2   E: Ibu set 1/2   N/O+1-5: Pose",
     "G: Return to finger poses    [: Previous BG    ]: Next BG",
-    "F1-F5: Background 1-5",
+    "F1-F6: Background 1-6",
     "Z X C V B: Sound 1-5         M: Stop sound",
     "6 7 0 8 9: Video + BG + song 1/2/3/4/5   ESC: Skip / Quit",
     "R: Run mode       LEFT / RIGHT (hold): Move Nando",
@@ -120,7 +120,7 @@ class WhiteboardRenderer:
                     'AUTO: BG1-2 SPORT / BG3-5 SCHOOL']),
                 ('02  LATAR & MEDIA', [
                     '[ / ]  Latar sebelumnya / berikutnya',
-                    'F1-F5  Pilih latar langsung',
+                    'F1-F6  Pilih latar langsung',
                     'Z X C V B  Audio 1-5     M  Stop audio',
                     '6 7 0 8 9  Video + BG/lagu 1/2/3/4/5']),
                 ('03  ANIMASI KHUSUS', [

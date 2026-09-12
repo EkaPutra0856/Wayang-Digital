@@ -6,7 +6,7 @@ import numpy as np
 
 BASE_DIR = Path(__file__).resolve().parent
 ASSET_ROOT = BASE_DIR / "FIX ASSET"
-BACKGROUNDS = [ASSET_ROOT / "Asset/BG" / f"{i} akhir.png" for i in range(1, 6)]
+BACKGROUNDS = [ASSET_ROOT / "Asset/BG" / f"{i} akhir.png" for i in range(1, 7)]
 SOUNDS = [ASSET_ROOT / "Asset/Sound" / name for name in (
     "1 opening.mp3", "2 makan.mp3", "3 brangkat sekolah.mp3",
     "4 ibu nganter buku.mp3", "5 pelukan ending.mp3")]
@@ -18,6 +18,8 @@ VIDEO_CUES = {
     key: (video, scene, SOUNDS[scene])
     for key, video, scene in zip('67890', VIDEOS, (0, 1, 3, 4, 2))
 }
+VIDEO_CUES['0'] = (VIDEOS[-1], 5, SOUNDS[2])
+VIDEO_CUES['8'] = (VIDEOS[2], 4, SOUNDS[3])
 NANDO = [ASSET_ROOT / "Nando Fix Animation" / f"{i}.png" for i in range(37, 45)]
 NANDO_SPORT = [ASSET_ROOT / "Nando Olahraga" / f"1 ({i}).png" for i in range(1, 10)]
 NANDO_SPORT.append(ASSET_ROOT / "Nando Olahraga/salam.png")

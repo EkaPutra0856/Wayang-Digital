@@ -1,6 +1,6 @@
 import './style.css';
 import assets from './generated/assets.json';
-import { ShowState, SCENES, SCALE_FACTORS } from './state.js';
+import { ShowState, SCENES, SCALE_FACTORS, TRANSITION_BACKGROUNDS } from './state.js';
 import { Renderer } from './renderer.js';
 import { MediaController } from './media.js';
 import { CameraController } from './camera.js';
@@ -37,7 +37,7 @@ document.querySelector('#app').innerHTML=`
           <div class="stage-footer"><div><span class="dot" id="camera-dot"></span><span id="camera-status">Kamera nonaktif</span><span class="footer-divider"></span><span id="pose-status">Nando 1 · Ibu 1</span></div>${button('focus',icon('eye')+'<span>Fokus panggung</span>','U','class="text-button"')}</div>
         </section>
         <section class="scene-section" aria-labelledby="scene-heading">
-          <div class="section-heading"><h2 id="scene-heading">Alur cerita <span>5 adegan</span></h2><span class="section-note">Pilih latar, lalu mainkan transisi</span></div>
+          <div class="section-heading"><h2 id="scene-heading">Alur cerita <span>6 latar</span></h2><span class="section-note">Pilih latar, lalu mainkan transisi</span></div>
           <div class="scene-list">${SCENES.map((s,i)=>`<button class="scene-tile" data-action="scene" data-value="${i}" aria-label="Pilih latar ${s.name}"><span class="scene-image"><img src="${assets['bg'+i]}" alt="" /><span class="scene-number">0${i+1}</span><span class="scene-check">✓</span></span><span class="scene-name">${s.name}<kbd>F${i+1}</kbd></span><span class="scene-subtitle">${s.subtitle}</span></button>`).join('')}</div>
         </section>
         <section class="cue-bar"><div class="cue-title"><span class="cue-icon">${icon('play')}</span><div><strong id="cue-title">Transisi · Taman</strong><span id="media-status">Siap dimainkan</span></div></div><div class="cue-actions">${button('video',icon('play')+'<span>Putar transisi</span>','6','class="primary" id="play-video"')}${button('sound',icon('sound')+'<span>Putar lagu</span>','Z','id="play-sound"')}${button('skip',icon('stop'),'','class="icon-button" aria-label="Lewati video" title="Lewati video (Esc)" id="skip-video"')}</div></section>
@@ -54,6 +54,9 @@ document.querySelector('#app').innerHTML=`
         </section>
         <section class="control-section"><div class="label-row"><h3>Animasi</h3><span>Sentuhan kecil, cerita hidup</span></div><div class="animation-grid">${button('run','<span>↝</span> Lari','R')}${button('ball','<span>◉</span> Bola pantul','B')}${button('sleep','<span>☾</span> Tidur','T')}${button('hug','<span>♡</span> Pelukan','H')}</div>
           <div class="movement"><button data-move="-1" aria-label="Gerakkan Nando ke kiri">←</button><span>Tahan untuk bergerak saat lari</span><button data-move="1" aria-label="Gerakkan Nando ke kanan">→</button></div>
+          ${button('bag','Tas','1','class="wide"')}
+          ${button('book','Buku','2','class="wide"')}
+          ${button('clear-props','Hilangkan tas & buku','','class="wide"')}
           ${button('toggle-curtain',icon('curtain')+'Tutup / buka tirai','I','class="wide"')}
           <div class="mini-actions">${button('lock','Kunci tinggi','L')}${button('balance','Ukuran normal','S')}</div>
         </section>
@@ -140,10 +143,10 @@ function sync() {
   }
   const busy=media.active||media.loading;
   $('#play-video').disabled=busy||state.paused||!started;
-  $('#play-video').querySelector('kbd').textContent=scene.key;
+  $('#play-video').querySelector('kbd').textContent=scene.key??'0';
   $('#play-video').querySelector('span').textContent=media.loading?'Memuat…':media.active?'Sedang diputar':'Putar transisi';
   $('#play-sound').disabled=busy||state.paused||!started;
-  $('#play-sound').querySelector('kbd').textContent=scene.soundKey;
+  $('#play-sound').querySelector('kbd').textContent=scene.soundKey??'C';
   $('#skip-video').disabled=!busy;
   $('#media-status').textContent=media.loading?'Menyiapkan video & lagu':media.active?'Video '+SCENES[media.scene].name+' sedang diputar':media.sound!==null?'Lagu '+SCENES[media.sound].name+' sedang diputar':'Siap dimainkan';
   $('#camera-button-text').textContent=camera.starting?'Menyiapkan kamera…':camera.ready?'Kamera aktif':'Aktifkan kamera';
@@ -186,7 +189,7 @@ async function dispatch(action,value) {
   if(action==='character'){selected=value;sync();return;}
   if(state.paused){toast('Lanjutkan pertunjukan untuk mengubah adegan atau animasi.');return;}
   if(action==='toggle-curtain'){if(media.loading)return;state.toggleCurtain();sync();return;}
-  if(action==='curtain'){state.curtain();sync();return;}
+  if(action==='curtain'){if(state.scene===5)state.setScene(2);else state.curtain();sync();return;}
   if(media.active||media.loading){toast('Lewati atau tunggu video selesai untuk mengubah panggung.');return;}
   switch(action) {
     case 'scene':state.setScene(Number(value));break;
@@ -195,10 +198,10 @@ async function dispatch(action,value) {
       const waitForCurtain=async()=>{
         while(state.curtainPhase!=='idle')await new Promise(resolve=>setTimeout(resolve,16));
       };
-      await media.playVideo(value===undefined?state.scene:Number(value),()=>{state.setScene(media.scene);if(state.paused)media.pause(true);},waitForCurtain);
+      await media.playVideo(value===undefined?(state.scene===5?2:state.scene):Number(value),()=>{state.setScene(TRANSITION_BACKGROUNDS[media.scene]);if(state.paused)media.pause(true);},waitForCurtain);
       break;
     }
-    case 'sound':await media.playSound(value===undefined?state.scene:Number(value));break;
+    case 'sound':await media.playSound(value===undefined?(state.scene===5?2:state.scene):Number(value));break;
     case 'bank':state.toggleBank(value);break;
     case 'pose':state.pose(Number(value),selected);break;
     case 'manual-pose':state.pose(value.finger,value.label);break;
@@ -206,6 +209,9 @@ async function dispatch(action,value) {
     case 'gesture':state.useGesture();if(!camera.ready)toast('Aktifkan kamera untuk mode jari, atau pilih Manual.');break;
     case 'manual':state.useKeyboard();break;
     case 'salam':state.setCostume('sport');state.banks.Right=2;state.run=false;state.sleep=false;state.hug=false;state.kick=-1;state.ball=null;selected='Right';state.pose(5,'Right');state.characters.Right.visible=true;break;
+    case 'bag':state.toggleProp('bag');break;
+    case 'book':state.toggleProp('book');break;
+    case 'clear-props':state.dismissProps();break;
     case 'jump':state.jump();break;
     case 'run':state.run=!state.run;break;
     case 'sleep':state.sleep=!state.sleep;break;
@@ -235,7 +241,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='Space'&&e.target.closest('button'))return;
   held.add(e.code);
   const bankNando=e.code==='KeyO'||e.key.toLowerCase()==='o',bankIbu=e.code==='KeyA'||e.key.toLowerCase()==='a';
-  const known=shortcuts[e.code]||bankNando||bankIbu||['Escape','ArrowLeft','ArrowRight','KeyE','KeyN','KeyY','KeyJ','BracketLeft','BracketRight'].includes(e.code)||/^Digit[0-9]$/.test(e.code)||/^F[1-5]$/.test(e.code)||['KeyZ','KeyX','KeyC','KeyV','KeyB'].includes(e.code);
+  const known=shortcuts[e.code]||bankNando||bankIbu||['Escape','ArrowLeft','ArrowRight','KeyE','KeyN','KeyY','KeyJ','BracketLeft','BracketRight'].includes(e.code)||/^Digit[0-9]$/.test(e.code)||/^F[1-6]$/.test(e.code)||['KeyZ','KeyX','KeyC','KeyV','KeyB'].includes(e.code);
   if(known)e.preventDefault();
   if(e.repeat)return;
   if(shortcuts[e.code])dispatch(shortcuts[e.code]);
@@ -244,10 +250,11 @@ window.addEventListener('keydown',e=>{
   else if(e.code==='Escape'){if(media.active||media.loading)dispatch('skip');else if(document.fullscreenElement)document.exitFullscreen();else if(focusMode)dispatch('focus');}
   else if(e.code==='KeyY')dispatch('costume',state.costume==='sport'?'school':'sport');
   else if(e.code==='KeyJ')dispatch('costume','auto');
-  else if(e.code==='BracketLeft')dispatch('scene',(state.scene+4)%5);
-  else if(e.code==='BracketRight')dispatch('scene',(state.scene+1)%5);
-  else if(/^F[1-5]$/.test(e.code))dispatch('scene',Number(e.code.slice(1))-1);
+  else if(e.code==='BracketLeft')dispatch('scene',(state.scene+SCENES.length-1)%SCENES.length);
+  else if(e.code==='BracketRight')dispatch('scene',(state.scene+1)%SCENES.length);
+  else if(/^F[1-6]$/.test(e.code))dispatch('scene',Number(e.code.slice(1))-1);
   else if(/^Digit[1-5]$/.test(e.code)) {
+    if(!held.has('KeyN')&&!held.has('KeyE')){if(e.code==='Digit1')dispatch('bag');if(e.code==='Digit2')dispatch('book');}
     for(const [key,label] of [['KeyN','Right'],['KeyE','Left']])if(held.has(key))dispatch('manual-pose',{label,finger:Number(e.code.slice(5))});
   } else {
     const key=e.code.replace('Digit','').replace('Key','');

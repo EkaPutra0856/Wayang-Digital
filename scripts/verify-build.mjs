@@ -3,7 +3,7 @@ import { resolve,join } from 'node:path';
 import assert from 'node:assert/strict';
 const root=resolve(import.meta.dirname,'..'),dist=join(root,'dist');
 const assets=JSON.parse(await readFile(join(root,'src/generated/assets.json'),'utf8'));
-assert.equal(Object.keys(assets).length,53,'Expected 43 images and 10 media');
+assert.equal(Object.keys(assets).length,56,'Expected 46 images and 10 media');
 for(const url of Object.values(assets)) {
  const file=join(dist,url);
  assert.ok((await stat(file)).size>0,'Missing or empty asset: '+url);

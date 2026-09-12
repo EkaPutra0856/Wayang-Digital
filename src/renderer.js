@@ -45,11 +45,33 @@ export class Renderer {
       }
       if(state.ball){const b=state.ball;this.sprite('ball5',b.x,b.y,h*.12,1,false,b.angle||.001);}
     }
+    if(!state.videoPlaying)this.props(state);
     if(state.showBoxes&&!state.videoPlaying)for(const hand of state.hands) {
       const [x1,y1,x2,y2]=hand.box;
       ctx.strokeStyle='#21e5a0';ctx.lineWidth=2;ctx.strokeRect(x1*w,y1*h,(x2-x1)*w,(y2-y1)*h);
       ctx.fillStyle='#123a2b';ctx.fillRect(x1*w,y1*h-26,160,26);
       ctx.fillStyle='#fff';ctx.font='16px sans-serif';ctx.fillText((hand.label==='Right'?'Nando':'Ibu')+' · '+hand.count+' jari',x1*w+6,y1*h-7);
+    }
+  }
+  props(state) {
+    const bag=this.images.bag,book=this.images.book;
+    if(!bag||!book)return;
+    const width=1280*.4,height=width*bag.height/bag.width,x=640,y=720*.55;
+    const draw=(id,cx,cy,w,h,angle,alpha)=>{
+      if(w<=0||h<=0||alpha<=0)return;
+      const ctx=this.ctx;ctx.save();ctx.globalAlpha=alpha;ctx.translate(cx,cy);ctx.rotate(-angle*Math.PI/180);
+      ctx.drawImage(this.images[id],-w/2,-h/2,w,h);ctx.restore();
+    };
+    const b=state.props.book;
+    if(b.phase!=='hidden') {
+      const enter=b.phase==='enter',p=enter?Math.sin(Math.min(1,b.time/.6)*Math.PI/2):1;
+      const scale=enter?.3+.7*p:1+.05*Math.sin(b.time*3.5),bw=width*.55*scale;
+      draw('book',x+width*.42*p,y-height*.38*p+(enter?0:Math.sin(b.time*3)*8),bw,bw*book.height/book.width,enter?15*(1-p):15*Math.sin(b.time*2.5),b.alpha);
+    }
+    const a=state.props.bag;
+    if(a.phase!=='hidden') {
+      const p=Math.min(1,a.time/.5),pop=1+2.70158*(p-1)**3+1.70158*(p-1)**2;
+      draw('bag',x,y,width*(a.phase==='enter'?pop:1+.04*Math.sin(a.time*3)),height*(a.phase==='enter'?pop:1-.04*Math.sin(a.time*3)),0,a.alpha);
     }
   }
   cameraPreview(video,hands=[]) {

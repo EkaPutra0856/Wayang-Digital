@@ -85,7 +85,7 @@ class AnimationController:
 
     def set_background(self, index):
         """All background sources (keyboard, voice and internal scenes) use this entry point."""
-        if not 0 <= index < 5:
+        if not 0 <= index < 6:
             raise ValueError(f'Invalid background index: {index}')
         self.current_bg = index
         self.apply_costume_for_background()

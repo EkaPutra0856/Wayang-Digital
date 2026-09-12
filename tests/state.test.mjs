@@ -1,7 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ShowState, SCENES } from '../src/state.js';
+import { ShowState, SCENES, TRANSITION_BACKGROUNDS } from '../src/state.js';
 import { voiceScene, toHands } from '../src/gestures.js';
+
+test('book brings bag, effects pause and dismiss independently',()=>{
+ const s=new ShowState();s.toggleProp('book');
+ assert.equal(s.props.bag.phase,'enter');assert.equal(s.props.book.phase,'enter');
+ s.paused=true;s.update(.1);assert.equal(s.props.book.time,0);
+ s.paused=false;for(let i=0;i<7;i++)s.update(.1);
+ assert.equal(s.props.book.phase,'loop');assert.equal(s.props.bag.phase,'loop');
+ s.toggleProp('book');for(let i=0;i<7;i++)s.update(.1);
+ assert.equal(s.props.book.phase,'hidden');assert.equal(s.props.bag.phase,'loop');
+ s.dismissProps();for(let i=0;i<7;i++)s.update(.1);
+ assert.equal(s.props.bag.phase,'hidden');
+});
 
 test('Nando jumps once, freezes on pause and lands at original feet position',()=>{
  const s=new ShowState(),y=s.characters.Right.y;s.jump();s.update(.1);
@@ -40,7 +52,7 @@ test('manual curtain stays closed until toggled and can close again',()=>{
  assert.equal(s.curtainPhase,'idle');
 });
 test('all five scenes retain keyboard mapping including scene 3',()=>{
- assert.deepEqual(SCENES.map(s=>s.key),['6','7','0','8','9']);
+ assert.deepEqual(SCENES.slice(0,5).map(s=>s.key),['6','7','0','8','9']);
  const s=new ShowState();for(let i=0;i<5;i++){s.setScene(i);assert.equal(s.costume,i<2?'sport':'school');}
  assert.equal(s.characters.Right.x,.07);
  s.characters.Right.x=.7;s.setScene(2);assert.equal(s.characters.Right.x,.07);
@@ -158,3 +170,5 @@ test('camera distance never changes character scale, even with vertical movement
  assert.equal(s.characters.Right.height,.46);assert.equal(s.characters.Left.height,.46);
  s.paused=true;s.changeScale(1);assert.equal(s.scaleLevel,0);
 });
+
+test('transition 0 targets the sixth background',()=>{const s=new ShowState();s.setScene(TRANSITION_BACKGROUNDS[2]);assert.equal(s.scene,5);assert.equal(SCENES[5].name,'Ruang Tamu');});

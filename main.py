@@ -48,7 +48,10 @@ def handle_keys(pressed, state, board, audio, video, held=None):
         if key in pressed:
             setattr(state, field, not getattr(state, field))
     if 'P' in pressed:
-        state.start_curtain()
+        if state.current_bg == 5:
+            state.set_background(2)
+        else:
+            state.start_curtain()
     if 'I' in pressed:
         state.toggle_curtain()
     if video.video_playing:
@@ -81,10 +84,12 @@ def handle_keys(pressed, state, board, audio, video, held=None):
                 state.debug_pose(i, 'Right')
         if f'F{i}' in pressed:
             state.set_background(i-1)
+    if 'F6' in pressed:
+        state.set_background(5)
     if '[' in pressed:
-        state.set_background((state.current_bg-1) % 5)
+        state.set_background((state.current_bg-1) % 6)
     if ']' in pressed:
-        state.set_background((state.current_bg+1) % 5)
+        state.set_background((state.current_bg+1) % 6)
     # Video wins if a sound and video key arrive together.
     for key, (path, background, soundtrack) in VIDEO_CUES.items():
         if key in pressed:

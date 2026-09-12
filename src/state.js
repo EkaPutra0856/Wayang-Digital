@@ -4,7 +4,9 @@ export const SCENES = [
   {name:'Sekolah', subtitle:'Berangkat sekolah', key:'0', soundKey:'C'},
   {name:'Kelas', subtitle:'Buku dari Ibu', key:'8', soundKey:'V'},
   {name:'Koridor', subtitle:'Pelukan penutup', key:'9', soundKey:'B'},
+  {name:'Ruang Tamu', subtitle:'Rumah keluarga', key:null, soundKey:null},
 ];
+export const TRANSITION_BACKGROUNDS = [0,1,5,4,4];
 export const CURTAIN = { closing:0.35, closed:1, opening:0.65 };
 export const SCALE_FACTORS = [1, 1.25, 1.5];
 const KICK = [0.25,0.35,0.35,0.16,1.6,0.3];
@@ -19,6 +21,7 @@ export class ShowState {
     this.lastPose={sport:1,school:1};
     this.paused=false; this.clock=0; this.run=false; this.sleep=false; this.hug=false;
     this.jumpHeight=0;this.jumpVelocity=0;
+    this.props={bag:{phase:'hidden',time:0,alpha:0},book:{phase:'hidden',time:0,alpha:0}};
     this.hugAlpha=0; this.facing=1; this.kick=-1; this.kickTimer=0; this.ball=null; this.ballMode=false;
     this.verticalLocked=true; this.scaleLevel=0; this.curtainPhase='idle'; this.curtainTimer=0;
     this.curtainManual=curtainClosed;
@@ -105,6 +108,17 @@ export class ShowState {
     if(this.paused||this.videoPlaying||this.sleep||this.hug||this.jumpHeight>0||this.jumpVelocity!==0)return;
     this.jumpVelocity=600;
   }
+  toggleProp(name) {
+    const p=this.props[name];
+    if(this.paused||this.videoPlaying||!p)return;
+    if(p.phase==='hidden'||p.phase==='fade') {
+      Object.assign(p,{phase:'enter',time:0,alpha:1});
+      if(name==='book'&&['hidden','fade'].includes(this.props.bag.phase))this.toggleProp('bag');
+    } else p.phase='fade';
+  }
+  dismissProps() {
+    for(const p of Object.values(this.props))if(p.phase!=='hidden')p.phase='fade';
+  }
   nandoFlipped() {
     if(this.characters.Right.pose===7&&!this.sleep&&!this.run&&this.kick<0&&this.ball)
       return this.ball.x<this.characters.Right.x*1280;
@@ -137,6 +151,11 @@ export class ShowState {
       if(this.jumpHeight<=0){this.jumpHeight=0;this.jumpVelocity=0;}
     }
     this.clock+=dt;this.hands=hands;
+    for(const [name,p] of Object.entries(this.props)) {
+      p.time+=dt;
+      if(p.phase==='enter'&&p.time>=(name==='bag'?.5:.6)){p.phase='loop';p.time=0;}
+      if(p.phase==='fade'){p.alpha=Math.max(0,p.alpha-dt*1.5);if(!p.alpha)p.phase='hidden';}
+    }
     this.hugAlpha=clamp(this.hugAlpha+dt*(this.hug?2:-2),0,1);
     for(const [label,c] of Object.entries(this.characters)) {
       const hand=hands.find(h=>h.label===label);
