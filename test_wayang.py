@@ -12,6 +12,18 @@ from effect_animator import overlay
 
 
 class StateTests(unittest.TestCase):
+    def test_manual_curtain_stays_closed_until_next_i(self):
+        state = AnimationController()
+        video = SimpleNamespace(video_playing=False)
+        handle_keys({'I'}, state, None, None, video)
+        state.update_curtain(10)
+        self.assertEqual(state.curtain_phase, 'closed')
+        handle_keys(set(), state, None, None, video, held={'I'})
+        self.assertEqual(state.curtain_phase, 'closed')
+        handle_keys({'I'}, state, None, None, video)
+        state.update_curtain(1)
+        self.assertEqual(state.curtain_phase, 'idle')
+
     def test_independent_bank_keys_and_gesture_mapping(self):
         state = AnimationController()
         video = SimpleNamespace(video_playing=False)
@@ -296,7 +308,7 @@ class CostumeTests(unittest.TestCase):
             self.state.animation_banks = {'Right': bank, 'Left': bank}
             for finger in range(1, 6):
                 self.keys('N', str(finger))
-                self.keys('I', str(finger))
+                self.keys('O', str(finger))
                 pose = (bank-1)*5+finger
                 self.assertEqual(self.state.get_nando_pose(), NANDO_SPORT[pose-1])
                 self.assertEqual(self.state.characters['Left'].pose, min(8, (bank-1)*5+finger))

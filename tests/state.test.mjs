@@ -2,6 +2,43 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ShowState, SCENES } from '../src/state.js';
 import { voiceScene, toHands } from '../src/gestures.js';
+
+test('Nando jumps once, freezes on pause and lands at original feet position',()=>{
+ const s=new ShowState(),y=s.characters.Right.y;s.jump();s.update(.1);
+ assert.ok(s.jumpHeight>0);const velocity=s.jumpVelocity;s.jump();assert.equal(s.jumpVelocity,velocity);
+ const height=s.jumpHeight;s.paused=true;s.update(.1);assert.equal(s.jumpHeight,height);
+ s.paused=false;for(let i=0;i<20;i++)s.update(.1);
+ assert.equal(s.jumpHeight,0);assert.equal(s.jumpVelocity,0);assert.equal(s.characters.Right.y,y);
+ s.jump();s.update(.1);assert.ok(s.jumpHeight>0);
+});
+test('only pose 7 follows the ball horizontally',()=>{
+ const s=new ShowState();s.characters.Right.pose=7;
+ s.ball={x:0};assert.equal(s.nandoFlipped(),true);
+ s.ball.x=1280;assert.equal(s.nandoFlipped(),false);
+ s.ball.x=0;
+ for(const pose of [1,2,3,4,5,6,8,9,10]){s.characters.Right.pose=pose;assert.equal(s.nandoFlipped(),false);}
+ s.run=true;s.facing=-1;assert.equal(s.nandoFlipped(),true);
+});
+
+test('web starts closed and transition opens only once',()=>{
+ const s=new ShowState({curtainClosed:true});s.update(100);
+ assert.equal(s.curtainPhase,'closed');s.openCurtain();s.update(.2);
+ assert.equal(s.curtainPhase,'opening');
+ const timer=s.curtainTimer;s.openCurtain();assert.equal(s.curtainTimer,timer);
+ s.update(1);assert.equal(s.curtainPhase,'idle');
+ s.openCurtain();s.update(10);assert.equal(s.curtainPhase,'idle');
+ s.toggleCurtain();s.update(.35);s.openCurtain();s.update(1);
+ assert.equal(s.curtainPhase,'idle');
+});
+
+test('manual curtain stays closed until toggled and can close again',()=>{
+ const s=new ShowState();s.toggleCurtain();s.update(10);
+ assert.equal(s.curtainPhase,'closed');s.update(100);
+ assert.equal(s.curtainPhase,'closed');s.toggleCurtain();s.update(1);
+ assert.equal(s.curtainPhase,'idle');s.toggleCurtain();s.update(.35);
+ assert.equal(s.curtainPhase,'closed');s.curtain(true);s.update(3);
+ assert.equal(s.curtainPhase,'idle');
+});
 test('all five scenes retain keyboard mapping including scene 3',()=>{
  assert.deepEqual(SCENES.map(s=>s.key),['6','7','0','8','9']);
  const s=new ShowState();for(let i=0;i<5;i++){s.setScene(i);assert.equal(s.costume,i<2?'sport':'school');}

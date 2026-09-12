@@ -5,6 +5,7 @@ import os
 KEYS = {chr(i): i for i in range(ord('A'), ord('Z')+1)}
 KEYS.update({str(i): ord(str(i)) for i in range(10)})
 KEYS.update({"TAB": 0x09, "SPACE": 0x20, "ESC": 0x1B, "LEFT": 0x25,
+             "UP": 0x26,
              "RIGHT": 0x27, "[": 0xDB, "]": 0xDD, "?": 0xBF,
              **{f"F{i}": 0x6F+i for i in range(1, 13)}})
 

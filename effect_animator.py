@@ -60,7 +60,8 @@ class EffectAnimator:
             sprite = self.character_sprite(state, label, h)
             breathing = state.sleep_mode and not (label == "Right" and state.football_active)
             bob = math.sin((state.clock-state.sleep_start_time)*2)*2 if breathing else 0
-            overlay(canvas, sprite, char.x*w, char.y*h+bob, char.alpha)
+            jump = state.jump_height*h/720 if label == 'Right' else 0
+            overlay(canvas, sprite, char.x*w, char.y*h+bob-jump, char.alpha)
         if state.ball.active:
             ball = self.assets.sprite(FOOTBALL[5], h*0.12)
             bh, bw = ball.shape[:2]

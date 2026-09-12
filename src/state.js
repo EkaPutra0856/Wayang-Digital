@@ -13,17 +13,21 @@ const NANDO_RUN_RIGHT=.86;
 export const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 const character = x=>({x,y:.88,height:.46,pose:1,alpha:1,manual:true,visible:true,candidate:0,candidateTime:0});
 export class ShowState {
-  constructor() {
+  constructor({curtainClosed=false}={}) {
     this.scene=0; this.banks={Right:1,Left:1}; this.costume='sport'; this.costumeMode='auto';
     this.characters={Right:character(.70),Left:character(.26)};
     this.lastPose={sport:1,school:1};
     this.paused=false; this.clock=0; this.run=false; this.sleep=false; this.hug=false;
+    this.jumpHeight=0;this.jumpVelocity=0;
     this.hugAlpha=0; this.facing=1; this.kick=-1; this.kickTimer=0; this.ball=null; this.ballMode=false;
     this.verticalLocked=true; this.scaleLevel=0; this.curtainPhase='idle'; this.curtainTimer=0;
+    this.curtainManual=curtainClosed;
+    if(curtainClosed)this.curtainPhase='closed';
     this.videoPlaying=false; this.gesture=false; this.showBoxes=false; this.hands=[]; this.nandoSpawnLock=false;
   }
   setScene(index) {
     if (!Number.isInteger(index)||index<0||index>=SCENES.length) return;
+    this.jumpHeight=0;this.jumpVelocity=0;
     if(index!==this.scene){this.ballMode=false;this.ball=null;}
     if(index!==0&&this.kick>=0){this.kick=-1;this.kickTimer=0;this.ball=null;}
     this.scene=index;
@@ -76,11 +80,35 @@ export class ShowState {
   curtain(restart=false) {
     if(this.paused||(!restart&&this.curtainPhase!=='idle')) return false;
     this.ballMode=false;this.ball=null;
+    this.curtainManual=false;
     this.curtainPhase='closing';this.curtainTimer=0;return true;
+  }
+  toggleCurtain() {
+    if(this.paused)return;
+    this.curtainManual=true;
+    const closing=['closing','closed'].includes(this.curtainPhase);
+    const duration=closing?CURTAIN.closing:CURTAIN.opening;
+    const moving=['closing','opening'].includes(this.curtainPhase);
+    const progress=moving?clamp(this.curtainTimer/duration,0,1):1;
+    this.curtainPhase=closing?'opening':'closing';
+    this.curtainTimer=(1-progress)*CURTAIN[this.curtainPhase];
+  }
+  openCurtain() {
+    if(this.paused||this.curtainPhase==='idle'||this.curtainPhase==='opening')return;
+    this.toggleCurtain();
   }
   startKick() {
     if(this.paused||this.videoPlaying||this.hug||this.kick>=0) return;
     this.kick=0;this.kickTimer=0;
+  }
+  jump() {
+    if(this.paused||this.videoPlaying||this.sleep||this.hug||this.jumpHeight>0||this.jumpVelocity!==0)return;
+    this.jumpVelocity=600;
+  }
+  nandoFlipped() {
+    if(this.characters.Right.pose===7&&!this.sleep&&!this.run&&this.kick<0&&this.ball)
+      return this.ball.x<this.characters.Right.x*1280;
+    return (this.run||this.kick>=0)&&this.facing<0;
   }
   startBall() {
     if(this.ballMode){this.ballMode=false;this.ball=null;return;}
@@ -95,6 +123,7 @@ export class ShowState {
     if(this.curtainPhase!=='idle') {
       this.curtainTimer+=dt;
       while(this.curtainPhase!=='idle'&&this.curtainTimer>=CURTAIN[this.curtainPhase]) {
+        if(this.curtainManual&&this.curtainPhase==='closed'){this.curtainTimer=0;break;}
         this.curtainTimer-=CURTAIN[this.curtainPhase];
         this.curtainPhase={closing:'closed',closed:'opening',opening:'idle'}[this.curtainPhase];
       }
@@ -102,6 +131,11 @@ export class ShowState {
     }
     if(this.videoPlaying)return;
     dt=Math.min(dt,.1);
+    if(this.jumpHeight>0||this.jumpVelocity!==0) {
+      this.jumpHeight+=this.jumpVelocity*dt-600*dt*dt;
+      this.jumpVelocity-=1200*dt;
+      if(this.jumpHeight<=0){this.jumpHeight=0;this.jumpVelocity=0;}
+    }
     this.clock+=dt;this.hands=hands;
     this.hugAlpha=clamp(this.hugAlpha+dt*(this.hug?2:-2),0,1);
     for(const [label,c] of Object.entries(this.characters)) {
@@ -149,7 +183,7 @@ export class ShowState {
       if(b.y>720-radius){b.y=720-radius;b.vy=-Math.abs(b.vy);}
       for(const c of Object.values(this.characters)) {
         if(c.alpha<=0)continue;
-        const centerX=c.x*1280,centerY=c.y*720-c.height*360;
+        const centerX=c.x*1280,centerY=c.y*720-c.height*360-(c===n?this.jumpHeight:0);
         const distanceX=b.x-centerX,distanceY=b.y-centerY;
         const distance=Math.hypot(distanceX,distanceY)||1;
         const collisionRadius=radius+c.height*220;

@@ -41,7 +41,7 @@ export class Renderer {
       for(const label of ['Left','Right']) {
         const c=state.characters[label],special=label==='Right'&&(state.run||state.kick>=0);
         const breath=state.sleep?1+Math.sin(state.clock*2)*.015:c.manual&&!special?1+Math.sin(state.clock*1.745+(label==='Right'?1.4:0))*.012:1;
-        this.sprite(state.sprite(label),c.x*w,c.y*h+(state.sleep?Math.sin(state.clock*2)*2:0),c.height*h*breath*(label==='Left'?1.5:1),c.alpha,special&&state.facing<0);
+        this.sprite(state.sprite(label),c.x*w,c.y*h-(label==='Right'?state.jumpHeight:0)+(state.sleep?Math.sin(state.clock*2)*2:0),c.height*h*breath*(label==='Left'?1.5:1),c.alpha,label==='Right'&&state.nandoFlipped());
       }
       if(state.ball){const b=state.ball;this.sprite('ball5',b.x,b.y,h*.12,1,false,b.angle||.001);}
     }

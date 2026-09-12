@@ -49,12 +49,16 @@ def handle_keys(pressed, state, board, audio, video, held=None):
             setattr(state, field, not getattr(state, field))
     if 'P' in pressed:
         state.start_curtain()
+    if 'I' in pressed:
+        state.toggle_curtain()
     if video.video_playing:
         return True  # Cutscene owns visuals and audio; no queued surprise triggers.
     if 'M' in pressed:
         audio.stop()
     if state.paused:
         return True
+    if 'UP' in pressed:
+        state.jump()
     if 'L' in pressed:
         state.toggle_scale_lock()
     if 'S' in pressed:
@@ -71,7 +75,7 @@ def handle_keys(pressed, state, board, audio, video, held=None):
         state.use_gesture()
     for i in range(1, 6):
         if str(i) in pressed:
-            if 'I' in held:
+            if 'O' in held:
                 state.debug_pose(i, 'Left')
             if 'N' in held:
                 state.debug_pose(i, 'Right')
@@ -160,7 +164,7 @@ def main(argv=None):
         screen_res = (max(640, round(sw*scale)), max(360, round(sh*scale)))
         if args.headless:
             screen_res = (1280, 720)
-        print('[READY] I+1-5: Ibu | N+1-5: Nando | G: gesture | U: UI | F12: help | Q: quit', flush=True)
+        print('[READY] I: tirai buka/tutup | O+1-5: Ibu | N+1-5: Nando | G: gesture | U: UI | F12: help | Q: quit', flush=True)
         previous = time.perf_counter()
         frame_count, camera_failures = 0, 0
         silent_buffer = np.zeros((1600, 2), dtype=np.int16)

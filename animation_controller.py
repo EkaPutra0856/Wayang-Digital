@@ -54,6 +54,8 @@ class AnimationController:
     run_frame: int = 0
     run_timer: float = 0.0
     nando_facing: int = 1
+    jump_height: float = 0.0
+    jump_velocity: float = 0.0
     football_active: bool = False
     football_state: int = 0
     football_timer: float = 0.0
@@ -73,6 +75,7 @@ class AnimationController:
     scale_locked: bool = False
     curtain_phase: str = 'idle'
     curtain_timer: float = 0.0
+    curtain_manual: bool = False
     nando_costume: str = 'SPORT'
     costume_mode: str = 'AUTO'
     last_costume_pose: dict = field(default_factory=lambda: {'SCHOOL': 1, 'SPORT': 1})
@@ -138,13 +141,29 @@ class AnimationController:
         if self.paused or (self.curtain_phase != 'idle' and not restart):
             return False
         self.curtain_phase, self.curtain_timer = 'closing', 0.0
+        self.curtain_manual = False
         return True
+
+    def toggle_curtain(self):
+        if self.paused:
+            return
+        self.curtain_manual = True
+        if self.curtain_phase in ('closing', 'closed'):
+            progress = min(1.0, self.curtain_timer / CURTAIN_CLOSE) if self.curtain_phase == 'closing' else 1.0
+            self.curtain_phase = 'opening'
+            self.curtain_timer = (1.0 - progress) * CURTAIN_OPEN
+        else:
+            progress = min(1.0, self.curtain_timer / CURTAIN_OPEN) if self.curtain_phase == 'opening' else 1.0
+            self.curtain_phase = 'closing'
+            self.curtain_timer = (1.0 - progress) * CURTAIN_CLOSE
 
     def update_curtain(self, dt):
         if self.curtain_phase == 'idle':
             return
         self.curtain_timer += dt
-        durations = {'closing': CURTAIN_CLOSE, 'closed': CURTAIN_HOLD, 'opening': CURTAIN_OPEN}
+        durations = {'closing': CURTAIN_CLOSE,
+                     'closed': math.inf if self.curtain_manual else CURTAIN_HOLD,
+                     'opening': CURTAIN_OPEN}
         next_phase = {'closing': 'closed', 'closed': 'opening', 'opening': 'idle'}
         while self.curtain_phase != 'idle' and self.curtain_timer >= durations[self.curtain_phase]:
             self.curtain_timer -= durations[self.curtain_phase]
@@ -205,6 +224,11 @@ class AnimationController:
         print("[FOOTBALL] Kick started")
         return True
 
+    def jump(self):
+        if self.paused or self.sleep_mode or self.hug_mode or self.jump_height > 0 or self.jump_velocity != 0:
+            return
+        self.jump_velocity = 600.0
+
     def update(self, dt, hands=(), cam_res=(640, 480), screen_res=(1280, 720),
                direction=0, video_playing=False, run_half_width=0.1):
         if self.paused:
@@ -213,6 +237,11 @@ class AnimationController:
         self.update_curtain(dt)
         if video_playing:
             return
+        if self.jump_height > 0 or self.jump_velocity != 0:
+            self.jump_height += self.jump_velocity*dt - 600*dt*dt
+            self.jump_velocity -= 1200*dt
+            if self.jump_height <= 0:
+                self.jump_height = self.jump_velocity = 0.0
         self.clock += dt
         detected = {item['label'] for item in hands}
         for label, char in self.characters.items():

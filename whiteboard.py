@@ -6,14 +6,14 @@ from effect_animator import EffectAnimator
 from animation_controller import CURTAIN_CLOSE, CURTAIN_OPEN
 
 HELP_LINES = [
-    "A: Nando set 1/2   E: Ibu set 1/2   N/I+1-5: Pose",
+    "A: Nando set 1/2   E: Ibu set 1/2   N/O+1-5: Pose",
     "G: Return to finger poses    [: Previous BG    ]: Next BG",
     "F1-F5: Background 1-5",
     "Z X C V B: Sound 1-5         M: Stop sound",
     "6 7 0 8 9: Video + BG + song 1/2/3/4/5   ESC: Skip / Quit",
     "R: Run mode       LEFT / RIGHT (hold): Move Nando",
-    "K: Football       T: Sleep       H: Pelukan",
-    "P: Curtain        L: Lock size + horizontal only    S: Balance size",
+    "UP: Jump   K: Football       T: Sleep       H: Pelukan",
+    "I: Tirai buka/tutup   P: Tirai otomatis   L: Lock size   S: Balance size",
     "Y: Nando costume MANUAL     J: AUTO (BG1-2 SPORT, BG3-5 SCHOOL)",
     "SPACE: Pause/resume (animation + audio + video)",
     "F: Fullscreen     W: Webcam preview     D: Hand boxes",
@@ -114,7 +114,7 @@ class WhiteboardRenderer:
             cv2.line(card, (28, 85), (1072, 85), (65, 58, 48), 1)
             groups = [
                 ('01  KARAKTER & KOSTUM', [
-                    'I+1-5  Ibu   N+1-5  Nando   A/E  Set N/I',
+                    'O+1-5  Ibu   N+1-5  Nando   A/E  Set N/I',
                     'Ulang kombinasi: hide   G: mode jari',
                     'Y  Ganti kostum manual     J  Kostum AUTO',
                     'AUTO: BG1-2 SPORT / BG3-5 SCHOOL']),
@@ -125,9 +125,9 @@ class WhiteboardRenderer:
                     '6 7 0 8 9  Video + BG/lagu 1/2/3/4/5']),
                 ('03  ANIMASI KHUSUS', [
                     'R  Lari looping     Panah  Arah & gerak',
-                    'K  Tendang bola     T  Tidur / istirahat',
+                    'UP  Lompat   K  Bola   T  Tidur',
                     'H  Pelukan (audio dipilih terpisah)',
-                    'P  Tirai 2.5 dtk; otomatis saat video']),
+                    'I  Buka/tutup tirai   P  Otomatis 2.5 dtk']),
                 ('04  KONTROL TAMPILAN', [
                     'SPACE  Pause / resume seluruh animasi',
                     'F  Fullscreen     W  Preview webcam',
