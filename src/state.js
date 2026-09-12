@@ -8,6 +8,8 @@ export const SCENES = [
 export const CURTAIN = { closing:0.35, closed:1, opening:0.65 };
 export const SCALE_FACTORS = [1, 1.25, 1.5];
 const KICK = [0.25,0.35,0.35,0.16,1.6,0.3];
+const NANDO_SPAWN_LEFT=.07;
+const NANDO_RUN_RIGHT=.86;
 export const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
 const character = x=>({x,y:.88,height:.46,pose:1,alpha:1,manual:true,visible:true,candidate:0,candidateTime:0});
 export class ShowState {
@@ -16,13 +18,18 @@ export class ShowState {
     this.characters={Right:character(.70),Left:character(.26)};
     this.lastPose={sport:1,school:1};
     this.paused=false; this.clock=0; this.run=false; this.sleep=false; this.hug=false;
-    this.hugAlpha=0; this.facing=1; this.kick=-1; this.kickTimer=0; this.ball=null;
+    this.hugAlpha=0; this.facing=1; this.kick=-1; this.kickTimer=0; this.ball=null; this.ballMode=false;
     this.verticalLocked=true; this.scaleLevel=0; this.curtainPhase='idle'; this.curtainTimer=0;
-    this.videoPlaying=false; this.gesture=false; this.showBoxes=false; this.hands=[];
+    this.videoPlaying=false; this.gesture=false; this.showBoxes=false; this.hands=[]; this.nandoSpawnLock=false;
   }
   setScene(index) {
     if (!Number.isInteger(index)||index<0||index>=SCENES.length) return;
+    if(index!==this.scene){this.ballMode=false;this.ball=null;}
+    if(index!==0&&this.kick>=0){this.kick=-1;this.kickTimer=0;this.ball=null;}
     this.scene=index;
+    this.run=index===2;
+    this.nandoSpawnLock=index===2;
+    if(index===2) this.characters.Right.x=NANDO_SPAWN_LEFT;
     if(this.costumeMode==='auto') this.setCostume(index<2?'sport':'school','auto');
   }
   setCostume(costume,mode='manual') {
@@ -68,11 +75,19 @@ export class ShowState {
   }
   curtain(restart=false) {
     if(this.paused||(!restart&&this.curtainPhase!=='idle')) return false;
+    this.ballMode=false;this.ball=null;
     this.curtainPhase='closing';this.curtainTimer=0;return true;
   }
   startKick() {
     if(this.paused||this.videoPlaying||this.hug||this.kick>=0) return;
-    this.kick=0;this.kickTimer=0;this.ball=null;
+    this.kick=0;this.kickTimer=0;
+  }
+  startBall() {
+    if(this.ballMode){this.ballMode=false;this.ball=null;return;}
+    if(this.paused||this.videoPlaying||this.hug)return;
+    const n=this.characters.Right;
+    this.ballMode=true;
+    this.ball={x:n.x*1280,y:n.y*720-260,vx:this.facing*390,vy:-260,angle:0};
   }
   update(dt,hands=[],direction=0) {
     if(this.paused) return;
@@ -107,26 +122,57 @@ export class ShowState {
         if(c.candidateTime>=.12)this.pose(hand.count,label,false);
       }
     }
+    if(this.nandoSpawnLock) {
+      this.characters.Right.x=NANDO_SPAWN_LEFT;
+      if(this.curtainPhase==='idle')this.nandoSpawnLock=false;
+    }
     if(this.hug||this.hugAlpha>0)return;
     const n=this.characters.Right;
     if(this.kick>=0) {
       this.kickTimer+=dt;
       while(this.kick>=0&&this.kickTimer>=KICK[this.kick]) {
         this.kickTimer-=KICK[this.kick];this.kick++;
-        if(this.kick===4)this.ball={x:n.x*1280+this.facing*n.height*720*.28,y:n.y*720-n.height*720*.25,vx:this.facing*550,vy:-420,angle:0};
-        if(this.kick>=KICK.length){this.kick=-1;this.ball=null;}
+        if(this.kick===4&&!this.ballMode)this.ball={x:n.x*1280+this.facing*n.height*720*.28,y:n.y*720-n.height*720*.25,vx:this.facing*550,vy:-420,angle:0};
+        if(this.kick>=KICK.length){this.kick=-1;if(!this.ballMode)this.ball=null;}
       }
-      if(this.ball) {
+      if(!this.ballMode&&this.ball) {
         const b=this.ball;b.x+=b.vx*dt;b.y+=b.vy*dt+450*dt*dt;b.vy+=900*dt;b.angle+=this.facing*480*dt;
         if(b.x< -60||b.x>1340||b.y>700)this.ball=null;
       }
-    } else if(this.run&&!this.sleep&&direction) {
-      this.facing=Math.sign(direction);n.x=clamp(n.x+direction*420*dt/1280,.14,.86);
+    }
+    if(this.ballMode&&this.ball) {
+      const b=this.ball,radius=42;
+      b.x+=b.vx*dt;b.y+=b.vy*dt;b.angle+=b.vx*dt/radius;
+      if(b.x<radius){b.x=radius;b.vx=Math.abs(b.vx);}
+      if(b.x>1280-radius){b.x=1280-radius;b.vx=-Math.abs(b.vx);}
+      if(b.y<radius){b.y=radius;b.vy=Math.abs(b.vy);}
+      if(b.y>720-radius){b.y=720-radius;b.vy=-Math.abs(b.vy);}
+      for(const c of Object.values(this.characters)) {
+        if(c.alpha<=0)continue;
+        const centerX=c.x*1280,centerY=c.y*720-c.height*360;
+        const distanceX=b.x-centerX,distanceY=b.y-centerY;
+        const distance=Math.hypot(distanceX,distanceY)||1;
+        const collisionRadius=radius+c.height*220;
+        if(distance<collisionRadius) {
+          const normalX=distanceX/distance,normalY=distanceY/distance;
+          b.x=centerX+normalX*collisionRadius;b.y=centerY+normalY*collisionRadius;
+          const velocityAlongNormal=b.vx*normalX+b.vy*normalY;
+          if(velocityAlongNormal<0) {
+            b.vx-=2*velocityAlongNormal*normalX;
+            b.vy-=2*velocityAlongNormal*normalY;
+            b.vx*=1.03;b.vy*=1.03;
+          }
+        }
+      }
+    } else if(this.kick<0&&this.run&&!this.sleep&&direction) {
+      this.facing=Math.sign(direction);
+      const next=n.x+direction*420*dt/1280;
+      n.x=next<NANDO_SPAWN_LEFT?NANDO_RUN_RIGHT:next>NANDO_RUN_RIGHT?NANDO_SPAWN_LEFT:next;
     }
   }
   sprite(label) {
     const c=this.characters[label];
-    if(label==='Right'&&this.kick>=0)return 'ball'+[0,1,2,3,4,0][this.kick];
+    if(label==='Right'&&this.scene===0&&c.pose===7)return 'ball0';
     if(this.sleep)return label==='Right'?this.costume+'3':'ibu6';
     if(label==='Right'&&this.run)return 'run'+(Math.floor(this.clock*10)%5);
     return (label==='Right'?this.costume:'ibu')+c.pose;

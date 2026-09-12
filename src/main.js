@@ -47,12 +47,12 @@ document.querySelector('#app').innerHTML=`
       <aside class="controls" aria-label="Kontrol pertunjukan">
         <div class="control-heading"><h2>Ruang kendali</h2><span class="pill">LIVE STUDIO</span></div>
         <section class="control-section"><div class="label-row"><h3>Karakter</h3><span>Set terpisah untuk setiap karakter</span></div>
-          <div class="bank-controls">${button('bank','Nando Set 1','A','class="bank-button" id="bank-nando" data-value="Right"')}${button('bank','Ibu Set 1','E','class="bank-button" id="bank-ibu" data-value="Left"')}</div><div class="character-tabs" role="group" aria-label="Pilih karakter"><button data-action="character" data-value="Right" aria-pressed="true"><span class="avatar"><img src="${assets.sport1}" alt="" /></span><span>Nando<small>Tangan kanan</small></span></button><button data-action="character" data-value="Left" aria-pressed="false"><span class="avatar"><img src="${assets.ibu1}" alt="" /></span><span>Ibu<small>Tangan kiri</small></span></button></div>
+          <div class="bank-controls">${button('bank','Nando Set 1','O','class="bank-button" id="bank-nando" data-value="Right"')}${button('bank','Ibu Set 1','A','class="bank-button" id="bank-ibu" data-value="Left"')}</div><div class="character-tabs" role="group" aria-label="Pilih karakter"><button data-action="character" data-value="Right" aria-pressed="true"><span class="avatar"><img src="${assets.sport1}" alt="" /></span><span>Nando<small>Tangan kanan</small></span></button><button data-action="character" data-value="Left" aria-pressed="false"><span class="avatar"><img src="${assets.ibu1}" alt="" /></span><span>Ibu<small>Tangan kiri</small></span></button></div>
           <div class="pose-label">POSE KARAKTER <span id="pose-key">N + angka</span></div><div id="pose-buttons" class="pose-buttons"></div>
           <div class="costume-row"><label for="costume">Kostum Nando</label><select id="costume"><option value="auto">Otomatis</option><option value="sport">Olahraga</option><option value="school">Sekolah</option></select></div>
           <div class="mini-actions">${button('salam','Salam')}${button('gesture','Mode jari','G')}${button('manual','Manual')}</div>
         </section>
-        <section class="control-section"><div class="label-row"><h3>Animasi</h3><span>Sentuhan kecil, cerita hidup</span></div><div class="animation-grid">${button('run','<span>↝</span> Lari','R')}${button('kick','<span>◉</span> Bola','K')}${button('sleep','<span>☾</span> Tidur','T')}${button('hug','<span>♡</span> Pelukan','H')}</div>
+        <section class="control-section"><div class="label-row"><h3>Animasi</h3><span>Sentuhan kecil, cerita hidup</span></div><div class="animation-grid">${button('run','<span>↝</span> Lari','R')}${button('ball','<span>◉</span> Bola pantul','B')}${button('sleep','<span>☾</span> Tidur','T')}${button('hug','<span>♡</span> Pelukan','H')}</div>
           <div class="movement"><button data-move="-1" aria-label="Gerakkan Nando ke kiri">←</button><span>Tahan untuk bergerak saat lari</span><button data-move="1" aria-label="Gerakkan Nando ke kanan">→</button></div>
           ${button('curtain',icon('curtain')+'Tutup & buka tirai','P','class="wide"')}
           <div class="mini-actions">${button('lock','Kunci tinggi','L')}${button('balance','Ukuran normal','S')}</div>
@@ -73,7 +73,7 @@ document.querySelector('#app').innerHTML=`
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="help"><div class="dialog-heading"><div class="eyebrow">PANDUAN PANGGUNG</div><button data-action="close-help" aria-label="Tutup panduan">×</button></div><h2>Siap menjadi dalang?</h2><p>Pilih adegan dan tekan <strong>Putar transisi</strong>. Gunakan pose dan animasi untuk melanjutkan ceritanya.</p>
   <div class="help-grid">
-    <section><h3>Karakter & gerakan</h3><p><kbd>N</kbd> + <kbd>1–5</kbd> Nando · <kbd>I</kbd> + <kbd>1–5</kbd> Ibu<br><kbd>A</kbd> set Nando / <kbd>E</kbd> set Ibu (1 / 2) · ulang pose untuk sembunyikan<br><kbd>G</kbd> mode jari · <kbd>Y</kbd> ganti kostum · <kbd>J</kbd> otomatis<br><kbd>R</kbd> lari · <kbd>← →</kbd> bergerak · <kbd>K</kbd> bola<br><kbd>T</kbd> tidur · <kbd>H</kbd> pelukan · <kbd>+</kbd> / <kbd>-</kbd> ukuran 100/125/150% (kedua karakter)<br><kbd>L</kbd> kunci tinggi · <kbd>S</kbd> ukuran normal</p><p><strong>Salam:</strong> SPORT, Bank 2, N+5. Tombol Salam langsung menyiapkannya.</p></section>
+    <section><h3>Karakter & gerakan</h3><p><kbd>N</kbd> + <kbd>1–5</kbd> Nando · <kbd>I</kbd> + <kbd>1–5</kbd> Ibu<br><kbd>O</kbd> set Nando / <kbd>A</kbd> set Ibu (1 / 2) · ulang pose untuk sembunyikan<br><kbd>G</kbd> mode jari · <kbd>Y</kbd> ganti kostum · <kbd>J</kbd> otomatis<br><kbd>R</kbd> lari · <kbd>← →</kbd> bergerak · <kbd>B</kbd> bola pantul<br><kbd>T</kbd> tidur · <kbd>H</kbd> pelukan · <kbd>+</kbd> / <kbd>-</kbd> ukuran 100/125/150% (kedua karakter)<br><kbd>L</kbd> kunci tinggi · <kbd>S</kbd> ukuran normal</p><p><strong>Salam:</strong> SPORT, Bank 2, N+5. Tombol Salam langsung menyiapkannya.</p></section>
     <section><h3>Latar & media</h3><p><kbd>F1–F5</kbd> pilih latar · <kbd>[ ]</kbd> sebelumnya / berikutnya<br><kbd>6 7 0 8 9</kbd> transisi adegan 1–5 + latar + lagu<br><kbd>Z X C V B</kbd> lagu 1–5 · <kbd>M</kbd> hentikan lagu<br><kbd>P</kbd> tirai · <kbd>SPACE</kbd> jeda semua<br><kbd>ESC</kbd> lewati video / keluar fullscreen<br><kbd>F</kbd> fullscreen · <kbd>U</kbd> fokus panggung · <kbd>Q</kbd> akhiri sesi</p><p>Tirai menutup 0,35 detik, tertutup penuh 1 detik, lalu membuka 0,65 detik. Video dimulai setelah tirai terbuka.</p></section>
     <section><h3>Kamera & suara</h3><p>Izin kamera wajib sebelum masuk. Jika kamera mati atau izin dicabut, akses terkunci kembali. Tangan kanan mengontrol Nando; kiri mengontrol Ibu. Tampilkan telapak dengan 1–5 jari. Titik dan garis pelacak serta jumlah jari ditampilkan di preview kamera. Tanpa tangan, karakter memudar. Jarak tangan tidak mengubah ukuran karakter.</p><p><kbd>W</kbd> preview kamera · <kbd>D</kbd> kotak tangan. Kamera dan mikrofon membutuhkan HTTPS atau localhost. Suara: “taman”, “rumah”, “sekolah”, “kelas”, “koridor”.</p></section>
     <section><h3>Tips pertunjukan</h3><p>Gunakan Chrome atau Edge desktop untuk kontrol lengkap. Semua adegan dan pose juga bisa dipilih dengan tombol layar. Mode suara bergantung dukungan browser dan koneksi internet.</p><p>Tekan <strong>Fokus panggung</strong> atau <strong>Layar penuh</strong> untuk pertunjukan. Saat tab ditinggalkan, pertunjukan otomatis dijeda. Aktifkan Lanjut saat kembali.</p></section>
@@ -96,13 +96,14 @@ const voice=new VoiceController(index=>{if(started&&!state.paused&&!media.active
 audio.volume=.8;
 
 function renderPoses() {
-  const signature=[selected,state.banks[selected],state.costume].join();
+  const signature=[selected,state.banks[selected],state.costume,state.scene].join();
   if(poseSignature!==signature) {
     poseSignature=signature;
     $('#pose-buttons').innerHTML=Array.from({length:5},(_,i)=>{
       const pose=(state.banks[selected]-1)*5+i+1,valid=pose<=state.limit(selected);
-      const id=(selected==='Right'?state.costume:'ibu')+pose;
-      return '<button data-action="pose" data-value="'+(i+1)+'" '+(!valid?'disabled':'')+' aria-label="Pose '+pose+(pose===10?' salam':'')+'" title="'+(valid?'Pose '+pose:'Slot kosong')+'">'+(valid?'<img src="'+assets[id]+'" alt="" />':'<span>—</span>')+'<small>'+pose+'</small></button>';
+      const id=selected==='Right'&&state.scene===0&&pose===7?'ball0':(selected==='Right'?state.costume:'ibu')+pose;
+      const label='Pose '+pose;
+      return '<button data-action="pose" data-value="'+(i+1)+'" '+(!valid?'disabled':'')+' aria-label="'+(valid?label:'Slot kosong')+'" title="'+(valid?label:'Slot kosong')+'">'+(valid?'<img src="'+assets[id]+'" alt="" />':'<span>—</span>')+'<small>'+pose+'</small></button>';
     }).join('');
   }
   for(const b of $('#pose-buttons').children)b.setAttribute('aria-pressed',String(state.characters[selected].pose===(state.banks[selected]-1)*5+Number(b.dataset.value)&&state.characters[selected].visible));
@@ -129,12 +130,12 @@ function sync() {
   $('#paused-badge').hidden=!state.paused;
   document.querySelectorAll('[data-action="pause"]').forEach(b=>{b.setAttribute('aria-pressed',String(state.paused));b.setAttribute('aria-label',state.paused?'Lanjutkan pertunjukan':'Jeda pertunjukan');});
   $('#pose-status').textContent='Nando '+state.characters.Right.pose+' · Ibu '+state.characters.Left.pose;
-  $('#bank-nando').innerHTML='Nando Set '+state.banks.Right+'<kbd>A</kbd>';
-  $('#bank-ibu').innerHTML='Ibu Set '+state.banks.Left+'<kbd>E</kbd>';
+  $('#bank-nando').innerHTML='Nando Set '+state.banks.Right+'<kbd>O</kbd>';
+  $('#bank-ibu').innerHTML='Ibu Set '+state.banks.Left+'<kbd>A</kbd>';
   $('#costume').value=state.costumeMode==='auto'?'auto':state.costume;
   for(const b of document.querySelectorAll('[data-action="scene"]'))b.setAttribute('aria-pressed',String(Number(b.dataset.value)===state.scene));
   for(const b of document.querySelectorAll('[data-action="character"]'))b.setAttribute('aria-pressed',String(b.dataset.value===selected));
-  for(const [action,on] of Object.entries({run:state.run,sleep:state.sleep,hug:state.hug,kick:state.kick>=0,lock:state.verticalLocked,gesture:state.gesture,manual:!state.gesture,boxes:state.showBoxes,preview:showPreview})){
+  for(const [action,on] of Object.entries({run:state.run,sleep:state.sleep,hug:state.hug,kick:state.kick>=0,ball:state.ballMode,lock:state.verticalLocked,gesture:state.gesture,manual:!state.gesture,boxes:state.showBoxes,preview:showPreview})){
     document.querySelectorAll('[data-action="'+action+'"]').forEach(b=>b.setAttribute('aria-pressed',String(on)));
   }
   const busy=media.active||media.loading;
@@ -209,6 +210,7 @@ async function dispatch(action,value) {
     case 'sleep':state.sleep=!state.sleep;break;
     case 'hug':state.hug=!state.hug;break;
     case 'kick':state.startKick();break;
+    case 'ball':state.startBall();break;
     case 'lock':state.verticalLocked=!state.verticalLocked;break;
     case 'scale-up':state.changeScale(1);break;
     case 'scale-down':state.changeScale(-1);break;
@@ -223,7 +225,7 @@ document.querySelectorAll('[data-move]').forEach(b=>{
   b.addEventListener('pointerdown',e=>{if(!started||state.paused||media.active)return;b.setPointerCapture(e.pointerId);pointerDirection=Number(b.dataset.move);});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>pointerDirection=0);
 });
-const shortcuts={Equal:'scale-up',NumpadAdd:'scale-up',Minus:'scale-down',NumpadSubtract:'scale-down',KeyR:'run',KeyK:'kick',KeyT:'sleep',KeyH:'hug',KeyP:'curtain',KeyL:'lock',KeyS:'balance',KeyG:'gesture',KeyF:'fullscreen',KeyU:'focus',KeyW:'preview',KeyD:'boxes',KeyM:'stop-sound',KeyQ:'end',Space:'pause'};
+const shortcuts={Equal:'scale-up',NumpadAdd:'scale-up',Minus:'scale-down',NumpadSubtract:'scale-down',KeyR:'run',KeyB:'ball',KeyT:'sleep',KeyH:'hug',KeyP:'curtain',KeyL:'lock',KeyS:'balance',KeyG:'gesture',KeyF:'fullscreen',KeyU:'focus',KeyW:'preview',KeyD:'boxes',KeyM:'stop-sound',KeyQ:'end',Space:'pause'};
 window.addEventListener('keydown',e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,select,textarea'))return;
   if($('#help').open)return;
@@ -231,12 +233,13 @@ window.addEventListener('keydown',e=>{
   if(!started)return;
   if(e.code==='Space'&&e.target.closest('button'))return;
   held.add(e.code);
-  const known=shortcuts[e.code]||['KeyA','KeyE','Escape','ArrowLeft','ArrowRight','KeyI','KeyN','KeyY','KeyJ','BracketLeft','BracketRight'].includes(e.code)||/^Digit[0-9]$/.test(e.code)||/^F[1-5]$/.test(e.code)||['KeyZ','KeyX','KeyC','KeyV','KeyB'].includes(e.code);
+  const bankNando=e.code==='KeyO'||e.key.toLowerCase()==='o',bankIbu=e.code==='KeyA'||e.key.toLowerCase()==='a';
+  const known=shortcuts[e.code]||bankNando||bankIbu||['Escape','ArrowLeft','ArrowRight','KeyI','KeyN','KeyY','KeyJ','BracketLeft','BracketRight'].includes(e.code)||/^Digit[0-9]$/.test(e.code)||/^F[1-5]$/.test(e.code)||['KeyZ','KeyX','KeyC','KeyV','KeyB'].includes(e.code);
   if(known)e.preventDefault();
   if(e.repeat)return;
   if(shortcuts[e.code])dispatch(shortcuts[e.code]);
-  else if(e.code==='KeyA')dispatch('bank','Right');
-  else if(e.code==='KeyE')dispatch('bank','Left');
+  else if(bankNando)dispatch('bank','Right');
+  else if(bankIbu)dispatch('bank','Left');
   else if(e.code==='Escape'){if(media.active||media.loading)dispatch('skip');else if(document.fullscreenElement)document.exitFullscreen();else if(focusMode)dispatch('focus');}
   else if(e.code==='KeyY')dispatch('costume',state.costume==='sport'?'school':'sport');
   else if(e.code==='KeyJ')dispatch('costume','auto');

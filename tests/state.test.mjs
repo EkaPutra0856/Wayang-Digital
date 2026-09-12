@@ -5,7 +5,11 @@ import { voiceScene, toHands } from '../src/gestures.js';
 test('all five scenes retain keyboard mapping including scene 3',()=>{
  assert.deepEqual(SCENES.map(s=>s.key),['6','7','0','8','9']);
  const s=new ShowState();for(let i=0;i<5;i++){s.setScene(i);assert.equal(s.costume,i<2?'sport':'school');}
- s.setCostume('sport');s.setScene(4);assert.equal(s.costume,'sport');
+ assert.equal(s.characters.Right.x,.07);
+ s.characters.Right.x=.7;s.setScene(2);assert.equal(s.characters.Right.x,.07);
+ assert.equal(s.run,true);
+ s.update(.1,[{label:'Right',box:[.45,.2,.55,.6],count:1}]);assert.equal(s.characters.Right.x,.07);
+ s.setCostume('sport');s.setScene(4);assert.equal(s.costume,'sport');assert.equal(s.run,false);
 });
 test('salam is selectable in bank 2 and costume fallback stays valid',()=>{
  const s=new ShowState();s.banks={Right:2,Left:2};s.pose(5,'Right');assert.equal(s.sprite('Right'),'sport10');
@@ -45,6 +49,42 @@ test('kick completes and running remains within the stage',()=>{
  assert.ok(flew);assert.equal(s.kick,-1);assert.equal(s.ball,null);
  s.run=true;for(let i=0;i<100;i++)s.update(.1,[],1);assert.ok(s.characters.Right.x<=.86);
 });
+test('Taman Pose 7 uses the static no-ball frame',()=>{
+ const s=new ShowState();s.banks.Right=2;s.pose(2,'Right');
+ assert.equal(s.characters.Right.pose,7);assert.equal(s.sprite('Right'),'ball0');
+ s.setScene(1);assert.equal(s.sprite('Right'),'sport7');
+});
+test('B ball trigger stays active and bounces at borders and characters',()=>{
+ const s=new ShowState();s.startBall();assert.equal(s.ballMode,true);assert.ok(s.ball);
+ s.ball={x:1250,y:360,vx:500,vy:0,angle:0};s.update(.1);assert.ok(s.ball.vx<0);assert.ok(s.ball.x<=1238);
+ s.ball={x:300,y:468,vx:100,vy:0,angle:0};s.update(.1);assert.ok(s.ball.vx<0);assert.ok(s.ball.vy===0);
+ for(let i=0;i<100;i++)s.update(.1);assert.ok(s.ball);assert.equal(s.ballMode,true);
+});
+test('B toggles the persistent ball and scene transitions clear it',()=>{
+ const s=new ShowState();s.startBall();assert.equal(s.ballMode,true);assert.ok(s.ball);
+ s.startBall();assert.equal(s.ballMode,false);assert.equal(s.ball,null);
+ s.startBall();s.setScene(1);assert.equal(s.ballMode,false);assert.equal(s.ball,null);
+ s.startBall();s.curtain();assert.equal(s.ballMode,false);assert.equal(s.ball,null);
+});
+test('B can start the persistent ball during the kick pose',()=>{
+ const s=new ShowState();s.startKick();s.startBall();
+ assert.equal(s.kick,0);assert.equal(s.ballMode,true);assert.ok(s.ball);
+ s.startBall();assert.equal(s.ballMode,false);assert.equal(s.ball,null);
+});
+test('two right-hand fingers keep Pose 7 normal on every scene',()=>{
+ const s=new ShowState();s.banks.Right=2;s.useGesture();
+ for(let i=0;i<4;i++)s.update(.05,[{label:'Right',box:[.4,.2,.6,.6],count:2}]);
+ assert.equal(s.kick,-1);assert.equal(s.characters.Right.pose,7);
+ const other=new ShowState();other.setScene(1);other.banks.Right=2;other.useGesture();
+ for(let i=0;i<4;i++)other.update(.05,[{label:'Right',box:[.4,.2,.6,.6],count:2}]);
+ assert.equal(other.kick,-1);assert.equal(other.characters.Right.pose,7);
+});
+test('running wraps from either edge to the opposite side',()=>{
+ const s=new ShowState();s.run=true;s.characters.Right.x=.08;
+ s.update(.1,[], -1);assert.equal(s.characters.Right.x,.86);
+ s.characters.Right.x=.07;s.update(.1,[], 1);assert.ok(s.characters.Right.x>.07);
+ s.characters.Right.x=.85;s.update(.1,[],1);assert.equal(s.characters.Right.x,.07);
+});
 test('voice triggers use full keywords, prioritizing class over school',()=>{
  assert.equal(voiceScene('ayo ke kelas sekolah'),3);assert.equal(voiceScene('taman'),0);
  assert.equal(voiceScene('makanan'),null);assert.equal(voiceScene('koridor sekolah'),4);
@@ -52,7 +92,7 @@ test('voice triggers use full keywords, prioritizing class over school',()=>{
 });
 
 test('independent banks route manual and gesture poses to each character',()=>{
- const s=new ShowState();s.toggleBank('Right');
+ const s=new ShowState();s.setScene(1);s.toggleBank('Right');
  assert.deepEqual(s.banks,{Right:2,Left:1});
  s.pose(3,'Right');s.pose(3,'Left');
  assert.equal(s.characters.Right.pose,8);assert.equal(s.characters.Left.pose,3);

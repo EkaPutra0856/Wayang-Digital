@@ -92,17 +92,19 @@ test('local hand model initializes in a worker with a simulated webcam',async({b
  }finally{await context.close();}
 });
 
-test('A and E control separate banks regardless of selected character; Tab only navigates',async({page})=>{
+test('O and A control separate banks regardless of selected character; Tab only navigates',async({page})=>{
  await start(page);
+ await expect(page.locator('#bank-nando')).toContainText('O');
+ await expect(page.locator('#bank-ibu')).toContainText('A');
  await page.locator('[data-action="character"][data-value="Left"]').click();
- await page.keyboard.press('KeyA');
+ await page.keyboard.press('o');
  await expect(page.locator('#bank-nando')).toContainText('Nando Set 2');
  await expect(page.locator('#bank-ibu')).toContainText('Ibu Set 1');
  await expect(page.locator('#pose-buttons button').first()).toHaveAttribute('aria-label','Pose 1');
- await page.keyboard.press('KeyE');
+ await page.keyboard.press('a');
  await expect(page.locator('#bank-ibu')).toContainText('Ibu Set 2');
  await expect(page.locator('#pose-buttons button').first()).toHaveAttribute('aria-label','Pose 6');
- await page.keyboard.down('KeyA');await page.keyboard.down('KeyA');await page.keyboard.up('KeyA');
+ await page.keyboard.down('o');await page.keyboard.down('o');await page.keyboard.up('o');
  await expect(page.locator('#bank-nando')).toContainText('Nando Set 1');
  await expect(page.locator('#bank-ibu')).toContainText('Ibu Set 2');
  await page.locator('#stage').focus();await page.keyboard.press('Tab');
@@ -152,4 +154,17 @@ test('scale triggers provide exactly two larger steps and keyboard repeat is ign
  await page.locator('#scale-up').click();await page.keyboard.press('KeyS');
  await expect(page.locator('#scale-label')).toHaveText('Normal 100%');
  await expect(page.locator('#finger-status')).toHaveCount(0);
+});
+test('B spawns the persistent bouncing ball trigger',async({page})=>{
+ await start(page);await page.locator('#stage').focus();await page.keyboard.press('KeyB');
+ await expect(page.locator('[data-action="ball"]')).toHaveAttribute('aria-pressed','true');
+});
+test('Nando pose 7 remains a normal pose on every background',async({page})=>{
+ await start(page);
+ await page.locator('#bank-nando').click();
+ await expect(page.locator('#pose-buttons button').nth(1)).toHaveAttribute('data-action','pose');
+ await expect(page.locator('#pose-buttons button').nth(1)).toHaveAttribute('aria-label','Pose 7');
+ await page.locator('[data-action="scene"][data-value="1"]').click();
+ await expect(page.locator('#pose-buttons button').nth(1)).toHaveAttribute('data-action','pose');
+ await expect(page.locator('#pose-buttons button').nth(1)).toHaveAttribute('aria-label','Pose 7');
 });
