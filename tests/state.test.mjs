@@ -23,12 +23,12 @@ test('Nando jumps once, freezes on pause and lands at original feet position',()
  assert.equal(s.jumpHeight,0);assert.equal(s.jumpVelocity,0);assert.equal(s.characters.Right.y,y);
  s.jump();s.update(.1);assert.ok(s.jumpHeight>0);
 });
-test('only pose 7 follows the ball horizontally',()=>{
- const s=new ShowState();s.characters.Right.pose=7;
+test('only pose 6 follows the ball horizontally',()=>{
+ const s=new ShowState();s.characters.Right.pose=6;
  s.ball={x:0};assert.equal(s.nandoFlipped(),true);
  s.ball.x=1280;assert.equal(s.nandoFlipped(),false);
  s.ball.x=0;
- for(const pose of [1,2,3,4,5,6,8,9,10]){s.characters.Right.pose=pose;assert.equal(s.nandoFlipped(),false);}
+ for(const pose of [1,2,3,4,5,7,8,9,10]){s.characters.Right.pose=pose;assert.equal(s.nandoFlipped(),false);}
  s.run=true;s.facing=-1;assert.equal(s.nandoFlipped(),true);
 });
 
@@ -98,9 +98,9 @@ test('kick completes and running remains within the stage',()=>{
  assert.ok(flew);assert.equal(s.kick,-1);assert.equal(s.ball,null);
  s.run=true;for(let i=0;i<100;i++)s.update(.1,[],1);assert.ok(s.characters.Right.x<=.86);
 });
-test('Taman Pose 7 uses the static no-ball frame',()=>{
- const s=new ShowState();s.banks.Right=2;s.pose(2,'Right');
- assert.equal(s.characters.Right.pose,7);assert.equal(s.sprite('Right'),'ball0');
+test('Taman Pose 6 uses the static no-ball frame',()=>{
+ const s=new ShowState();s.banks.Right=2;s.pose(1,'Right');
+ assert.equal(s.characters.Right.pose,6);assert.equal(s.sprite('Right'),'ball0');
  s.setScene(1);assert.equal(s.sprite('Right'),'sport7');
 });
 test('B ball trigger stays active and bounces at borders and characters',()=>{
@@ -172,3 +172,5 @@ test('camera distance never changes character scale, even with vertical movement
 });
 
 test('transition 0 targets the sixth background',()=>{const s=new ShowState();s.setScene(TRANSITION_BACKGROUNDS[2]);assert.equal(s.scene,5);assert.equal(SCENES[5].name,'Ruang Tamu');});
+
+test('Nando slots 6 and 7 swap while Ibu stays unchanged',()=>{const s=new ShowState();s.setScene(1);for(const costume of ['sport','school']){s.setCostume(costume);assert.equal(s.poseSprite('Right',6),costume+'7');assert.equal(s.poseSprite('Right',7),costume+'6');}assert.equal(s.poseSprite('Left',6),'ibu6');assert.equal(s.poseSprite('Left',7),'ibu7');});

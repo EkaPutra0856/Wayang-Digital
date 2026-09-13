@@ -104,7 +104,7 @@ function renderPoses() {
     poseSignature=signature;
     $('#pose-buttons').innerHTML=Array.from({length:5},(_,i)=>{
       const pose=(state.banks[selected]-1)*5+i+1,valid=pose<=state.limit(selected);
-      const id=selected==='Right'&&state.scene===0&&pose===7?'ball0':(selected==='Right'?state.costume:'ibu')+pose;
+      const id=state.poseSprite(selected,pose);
       const label='Pose '+pose;
       return '<button data-action="pose" data-value="'+(i+1)+'" '+(!valid?'disabled':'')+' aria-label="'+(valid?label:'Slot kosong')+'" title="'+(valid?label:'Slot kosong')+'">'+(valid?'<img src="'+assets[id]+'" alt="" />':'<span>—</span>')+'<small>'+pose+'</small></button>';
     }).join('');

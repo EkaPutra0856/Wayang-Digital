@@ -23,6 +23,8 @@ VIDEO_CUES['8'] = (VIDEOS[2], 4, SOUNDS[3])
 NANDO = [ASSET_ROOT / "Nando Fix Animation" / f"{i}.png" for i in range(37, 45)]
 NANDO_SPORT = [ASSET_ROOT / "Nando Olahraga" / f"1 ({i}).png" for i in range(1, 10)]
 NANDO_SPORT.append(ASSET_ROOT / "Nando Olahraga/salam.png")
+NANDO[5], NANDO[6] = NANDO[6], NANDO[5]
+NANDO_SPORT[5], NANDO_SPORT[6] = NANDO_SPORT[6], NANDO_SPORT[5]
 NANDO_COSTUMES = {'SCHOOL': NANDO, 'SPORT': NANDO_SPORT}
 NANDO_SLEEP = {'SCHOOL': NANDO[2], 'SPORT': NANDO_SPORT[2]}
 IBU = [ASSET_ROOT / "Ibu" / f"{i}.png" for i in range(58, 66)]

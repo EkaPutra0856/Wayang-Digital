@@ -120,7 +120,7 @@ export class ShowState {
     for(const p of Object.values(this.props))if(p.phase!=='hidden')p.phase='fade';
   }
   nandoFlipped() {
-    if(this.characters.Right.pose===7&&!this.sleep&&!this.run&&this.kick<0&&this.ball)
+    if(this.characters.Right.pose===6&&!this.sleep&&!this.run&&this.kick<0&&this.ball)
       return this.ball.x<this.characters.Right.x*1280;
     return (this.run||this.kick>=0)&&this.facing<0;
   }
@@ -223,11 +223,18 @@ export class ShowState {
       n.x=next<NANDO_SPAWN_LEFT?NANDO_RUN_RIGHT:next>NANDO_RUN_RIGHT?NANDO_SPAWN_LEFT:next;
     }
   }
+  poseSprite(label,pose) {
+    if(label==='Right') {
+      if(this.scene===0&&pose===6)return 'ball0';
+      return this.costume+(pose===6?7:pose===7?6:pose);
+    }
+    return 'ibu'+pose;
+  }
   sprite(label) {
     const c=this.characters[label];
-    if(label==='Right'&&this.scene===0&&c.pose===7)return 'ball0';
+    if(label==='Right'&&this.scene===0&&c.pose===6)return 'ball0';
     if(this.sleep)return label==='Right'?this.costume+'3':'ibu6';
     if(label==='Right'&&this.run)return 'run'+(Math.floor(this.clock*10)%5);
-    return (label==='Right'?this.costume:'ibu')+c.pose;
+    return this.poseSprite(label,c.pose);
   }
 }
