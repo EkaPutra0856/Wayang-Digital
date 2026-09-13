@@ -11,7 +11,7 @@ await mkdir(join(root, 'src/generated'), { recursive: true });
 const manifest = {};
 const images = [
   ['bag','../Effect/Tas.png'],
-  ['book','../Effect/Buku.png'],
+  ['book','../Effect/Buku-biru.png'],
   ...Array.from({length:6}, (_,i)=>['bg'+i, 'Asset/BG/'+(i+1)+' akhir.png', true]),
   ...Array.from({length:8}, (_,i)=>['school'+(i+1), 'Nando Fix Animation/'+(37+i)+'.png']),
   ...Array.from({length:9}, (_,i)=>['sport'+(i+1), 'Nando Olahraga/1 ('+(i+1)+').png']),

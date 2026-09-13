@@ -125,6 +125,7 @@ function sync() {
   $('#start').disabled=!loaded||camera.starting;
   $('#start').textContent=camera.starting?'Menunggu izin dan menyiapkan kamera...':'Izinkan kamera & masuk';
 
+  for(const name of ['bag','book'])document.querySelector(`[data-action="${name}"]`).setAttribute('aria-pressed',String(['enter','loop'].includes(state.props[name].phase)));
   const scene=SCENES[state.scene];
   $('#scene-label').textContent='0'+(state.scene+1)+' / '+scene.name.toUpperCase();
   $('#cue-title').textContent='Transisi · '+scene.name;
@@ -209,8 +210,12 @@ async function dispatch(action,value) {
     case 'gesture':state.useGesture();if(!camera.ready)toast('Aktifkan kamera untuk mode jari, atau pilih Manual.');break;
     case 'manual':state.useKeyboard();break;
     case 'salam':state.setCostume('sport');state.banks.Right=2;state.run=false;state.sleep=false;state.hug=false;state.kick=-1;state.ball=null;selected='Right';state.pose(5,'Right');state.characters.Right.visible=true;break;
-    case 'bag':state.toggleProp('bag');break;
-    case 'book':state.toggleProp('book');break;
+    case 'bag':
+    case 'book':
+      state.toggleProp(action);
+      if(state.curtainPhase!=='idle')toast('Efek aktif di balik tirai. Tekan I untuk membuka tirai.');
+      break;
+
     case 'clear-props':state.dismissProps();break;
     case 'jump':state.jump();break;
     case 'run':state.run=!state.run;break;
@@ -225,6 +230,38 @@ async function dispatch(action,value) {
   }
   sync();
 }
+let propDrag=null;
+function canvasPoint(e) {
+  const r=canvas.getBoundingClientRect(),scale=Math.min(r.width/1280,r.height/720);
+  return {x:(e.clientX-r.left-(r.width-1280*scale)/2)/scale,y:(e.clientY-r.top-(r.height-720*scale)/2)/scale};
+}
+function propAt(point) {
+  if(!started||media.active||media.loading||state.curtainPhase!=='idle')return null;
+  return [...(renderer.propBounds||[])].reverse().find(b=>{
+    if(state.props[b.id].phase==='hidden')return false;
+    const dx=point.x-b.x,dy=point.y-b.y,c=Math.cos(b.angle),s=Math.sin(b.angle);
+    return Math.abs(dx*c+dy*s)<=b.w/2&&Math.abs(-dx*s+dy*c)<=b.h/2;
+  });
+}
+canvas.addEventListener('pointerdown',e=>{
+  if(e.button!==0)return;
+  const point=canvasPoint(e),hit=propAt(point);if(!hit)return;
+  const p=state.props[hit.id];p.offset??={x:0,y:0};
+  propDrag={id:hit.id,pointer:e.pointerId,start:point,offset:{...p.offset},bounds:hit};
+  canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing';e.preventDefault();
+});
+canvas.addEventListener('pointermove',e=>{
+  const point=canvasPoint(e);
+  if(!propDrag){canvas.style.cursor=propAt(point)?'grab':'';return;}
+  if(e.pointerId!==propDrag.pointer)return;
+  const d=propDrag,b=d.bounds;
+  const x=Math.max(b.w/2,Math.min(1280-b.w/2,b.x+point.x-d.start.x));
+  const y=Math.max(b.h/2,Math.min(720-b.h/2,b.y+point.y-d.start.y));
+  state.props[d.id].offset={x:d.offset.x+x-b.x,y:d.offset.y+y-b.y};
+});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>{
+  if(propDrag&&e.pointerId===propDrag.pointer){propDrag=null;canvas.style.cursor='';}
+});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b&&!b.disabled)dispatch(b.dataset.action,b.dataset.value);});
 $('#costume').addEventListener('change',e=>dispatch('costume',e.target.value));
 $('#volume').addEventListener('input',e=>{audio.volume=Number(e.target.value)/100;$('#volume-label').textContent=e.target.value+'%';});
@@ -238,31 +275,32 @@ window.addEventListener('keydown',e=>{
   if($('#help').open)return;
   if(e.code==='Slash'||e.code==='F12'){e.preventDefault();if(!e.repeat)dispatch('help');return;}
   if(!started)return;
-  if(e.code==='Space'&&e.target.closest('button'))return;
-  held.add(e.code);
-  const bankNando=e.code==='KeyO'||e.key.toLowerCase()==='o',bankIbu=e.code==='KeyA'||e.key.toLowerCase()==='a';
-  const known=shortcuts[e.code]||bankNando||bankIbu||['Escape','ArrowLeft','ArrowRight','KeyE','KeyN','KeyY','KeyJ','BracketLeft','BracketRight'].includes(e.code)||/^Digit[0-9]$/.test(e.code)||/^F[1-6]$/.test(e.code)||['KeyZ','KeyX','KeyC','KeyV','KeyB'].includes(e.code);
+  const code=e.code.replace(/^Numpad([0-9])$/, 'Digit$1');
+  if(code==='Space'&&e.target.closest('button'))return;
+  held.add(code);
+  const bankNando=code==='KeyO'||e.key.toLowerCase()==='o',bankIbu=code==='KeyA'||e.key.toLowerCase()==='a';
+  const known=shortcuts[code]||bankNando||bankIbu||['Escape','ArrowLeft','ArrowRight','KeyE','KeyN','KeyY','KeyJ','BracketLeft','BracketRight'].includes(code)||/^Digit[0-9]$/.test(code)||/^F[1-6]$/.test(code)||['KeyZ','KeyX','KeyC','KeyV','KeyB'].includes(code);
   if(known)e.preventDefault();
   if(e.repeat)return;
-  if(shortcuts[e.code])dispatch(shortcuts[e.code]);
+  if(shortcuts[code])dispatch(shortcuts[code]);
   else if(bankNando)dispatch('bank','Right');
   else if(bankIbu)dispatch('bank','Left');
-  else if(e.code==='Escape'){if(media.active||media.loading)dispatch('skip');else if(document.fullscreenElement)document.exitFullscreen();else if(focusMode)dispatch('focus');}
-  else if(e.code==='KeyY')dispatch('costume',state.costume==='sport'?'school':'sport');
-  else if(e.code==='KeyJ')dispatch('costume','auto');
-  else if(e.code==='BracketLeft')dispatch('scene',(state.scene+SCENES.length-1)%SCENES.length);
-  else if(e.code==='BracketRight')dispatch('scene',(state.scene+1)%SCENES.length);
-  else if(/^F[1-6]$/.test(e.code))dispatch('scene',Number(e.code.slice(1))-1);
-  else if(/^Digit[1-5]$/.test(e.code)) {
-    if(!held.has('KeyN')&&!held.has('KeyE')){if(e.code==='Digit1')dispatch('bag');if(e.code==='Digit2')dispatch('book');}
-    for(const [key,label] of [['KeyN','Right'],['KeyE','Left']])if(held.has(key))dispatch('manual-pose',{label,finger:Number(e.code.slice(5))});
+  else if(code==='Escape'){if(media.active||media.loading)dispatch('skip');else if(document.fullscreenElement)document.exitFullscreen();else if(focusMode)dispatch('focus');}
+  else if(code==='KeyY')dispatch('costume',state.costume==='sport'?'school':'sport');
+  else if(code==='KeyJ')dispatch('costume','auto');
+  else if(code==='BracketLeft')dispatch('scene',(state.scene+SCENES.length-1)%SCENES.length);
+  else if(code==='BracketRight')dispatch('scene',(state.scene+1)%SCENES.length);
+  else if(/^F[1-6]$/.test(code))dispatch('scene',Number(code.slice(1))-1);
+  else if(/^Digit[1-5]$/.test(code)) {
+    if(!held.has('KeyN')&&!held.has('KeyE')){if(code==='Digit1')dispatch('bag');if(code==='Digit2')dispatch('book');}
+    for(const [key,label] of [['KeyN','Right'],['KeyE','Left']])if(held.has(key))dispatch('manual-pose',{label,finger:Number(code.slice(5))});
   } else {
-    const key=e.code.replace('Digit','').replace('Key','');
+    const key=code.replace('Digit','').replace('Key','');
     const videoScene=SCENES.findIndex(s=>s.key===key),soundScene=SCENES.findIndex(s=>s.soundKey===key);
     if(videoScene>=0)dispatch('video',videoScene);else if(soundScene>=0)dispatch('sound',soundScene);
   }
 });
-window.addEventListener('keyup',e=>held.delete(e.code));
+window.addEventListener('keyup',e=>held.delete(e.code.replace(/^Numpad([0-9])$/, 'Digit$1')));
 window.addEventListener('blur',()=>{held.clear();pointerDirection=0;});
 document.addEventListener('visibilitychange',()=>{
   held.clear();pointerDirection=0;

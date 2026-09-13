@@ -54,11 +54,14 @@ export class Renderer {
     }
   }
   props(state) {
+    this.propBounds=[];
     const bag=this.images.bag,book=this.images.book;
     if(!bag||!book)return;
-    const width=1280*.4,height=width*bag.height/bag.width,x=640,y=720*.55;
+    const width=1280*.12,height=width*bag.height/bag.width,x=640,y=720*.55;
     const draw=(id,cx,cy,w,h,angle,alpha)=>{
       if(w<=0||h<=0||alpha<=0)return;
+      const offset=state.props[id].offset||{x:0,y:0};cx+=offset.x;cy+=offset.y;
+      this.propBounds.push({id,x:cx,y:cy,w,h,angle:-angle*Math.PI/180});
       const ctx=this.ctx;ctx.save();ctx.globalAlpha=alpha;ctx.translate(cx,cy);ctx.rotate(-angle*Math.PI/180);
       ctx.drawImage(this.images[id],-w/2,-h/2,w,h);ctx.restore();
     };
@@ -66,7 +69,7 @@ export class Renderer {
     if(b.phase!=='hidden') {
       const enter=b.phase==='enter',p=enter?Math.sin(Math.min(1,b.time/.6)*Math.PI/2):1;
       const scale=enter?.3+.7*p:1+.05*Math.sin(b.time*3.5),bw=width*.55*scale;
-      draw('book',x+width*.42*p,y-height*.38*p+(enter?0:Math.sin(b.time*3)*8),bw,bw*book.height/book.width,enter?15*(1-p):15*Math.sin(b.time*2.5),b.alpha);
+      draw('book',x+(width*.95+24)*p,y-height*.38*p+(enter?0:Math.sin(b.time*3)*8),bw,bw*book.height/book.width,enter?15*(1-p):15*Math.sin(b.time*2.5),b.alpha);
     }
     const a=state.props.bag;
     if(a.phase!=='hidden') {
